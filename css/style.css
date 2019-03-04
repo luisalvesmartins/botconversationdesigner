@@ -1,0 +1,78 @@
+* {
+    box-sizing: border-box;
+  }
+
+  html, body {
+	font: 12px 'Segoe UI';
+    margin: 0;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    display: -webkit-flex;
+    flex-direction: column;
+    -webkit-flex-direction: column;
+  }
+
+  #header {
+    flex: 0 0 50px;
+    -webkit-flex: 0 0 50px;
+	padding:12px 10px;
+	font:30px 'Segoe UI Light';
+  }
+
+  #footer {
+    flex: 0 0 30px;
+    -webkit-flex: 0 0 30px;
+	padding:12px 10px;
+  }
+
+  #main {
+    flex: 1 0 0px; /** Don't set parent of component to auto */
+    -webkit-flex: 1 0 0px; /** Don't set parent of component to auto */
+    display: flex;
+    display: -webkit-flex;
+    flex-direction: row;
+    -webkit-flex-direction: row;
+    min-height: 0px;
+  }
+
+  .panel {
+    display: flex;
+    display: -webkit-flex;
+    flex-direction: column;
+    -webkit-flex-direction: column;
+    flex: 1 0 auto;
+    -webkit-flex: 1 0 auto;
+    overflow: auto;
+  }
+  #right.panel {
+    flex: 0 0 200px;
+    -webkit-flex: 0 0 200px;
+  }
+  #left.panel {
+    flex: 0 0 300px;
+    -webkit-flex: 0 0 300px;
+  }
+
+  .largeChild {
+    margin: 5px;
+    padding: 5px;
+    min-height: 200px;
+    min-width: 10px;
+	height:100%
+  }    
+  #botWC{
+  position:relative;
+  background-color:white;
+  height:100%;
+  }
+
+  #propList {font:12px 'Segoe UI'}
+  #propList div {font:bold 10px 'Segoe UI'}
+.godiag {
+  padding-top:60px;width: 100%; height:100%; display: flex; justify-content: space-between
+}
+#myPaletteDiv {
+  width: 105px; margin-right: 2px; background-color: whitesmoke; border: solid 1px black
+}
+#myDiagramDiv {flex-grow: 1; height: 100%; border: solid 1px black}
