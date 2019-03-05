@@ -1,0 +1,97 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+// Import required Bot Builder
+const { ComponentDialog, WaterfallDialog, TextPrompt } = require('botbuilder-dialogs');
+const { MessageFactory } = require('botbuilder');
+
+// Dialog IDs
+const MAIN_DIALOG = 'mainDialog';
+
+// Prompt IDs
+const NAME_PROMPT = 'namePrompt';
+
+// TEXT STRINGS
+###TEXTSTRINGS###
+
+/**
+ * @param {String} dialogId unique identifier for this dialog instance
+ * @param {PropertyStateAccessor} userProfileAccessor property accessor for user state
+ */
+class Main extends ComponentDialog {
+    constructor(dialogId, userProfileAccessor) {
+        super(dialogId);
+
+        // validate what was passed in
+        if (!dialogId) throw new Error('Missing parameter.  dialogId is required');
+        if (!userProfileAccessor) throw new Error('Missing parameter.  userProfileAccessor is required');
+
+        // Add a water fall dialog with 4 steps.
+        // The order of step function registration is important
+        // as a water fall dialog executes steps registered in order
+        this.addDialog(new WaterfallDialog("MAIN_DIALOG", [
+            this.MAINSTEP.bind(this),
+            this.LOOP.bind(this)
+        ]));
+
+        // Add text prompts for name and city
+        this.addDialog(new TextPrompt(NAME_PROMPT));
+
+        // Save off our state accessor for later use
+        this.userProfileAccessor = userProfileAccessor;
+    }
+
+async MAINSTEP(step){
+    let userProfile = await this.userProfileAccessor.get(step.context);
+    if (userProfile === undefined) {
+        userProfile = {step:1};
+    }
+
+    var stepNumber=userProfile.step;
+    console.log("AQUI")
+    //SAVE step
+    await this.userProfileAccessor.set(step.context, userProfile);
+
+    switch (stepNumber) {
+//STEPS
+###STEPS###    
+            default:
+                console.log("ERROR");
+                userProfile = {step:1};
+                await this.userProfileAccessor.set(step.context, userProfile);
+                return await step.next();
+                break;
+        }
+    }
+
+    async LOOP(step){
+        console.log("LOOP");
+        let userProfile = await this.userProfileAccessor.get(step.context);
+        userProfile.result=step.result;
+        var old=userProfile.step;
+        switch (userProfile.step) {
+///MOVENEXT
+###MOVENEXT###            
+       
+            default:
+                break;
+        }
+        await this.userProfileAccessor.set(step.context, userProfile);
+
+
+        return await step.replaceDialog(MAIN_DIALOG);
+    }
+///FUNCTIONS
+###FUNCTIONS###    
+
+    async ReplacePragmas(step,text){
+        let userProfile = await this.userProfileAccessor.get(step.context);
+        for (var attrname in userProfile)
+        {
+            text=text.replace("{" + attrname + "}",userProfile[attrname]);
+        }
+        return text;
+    }
+}
+
+exports.MainDialog = Main;

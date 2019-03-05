@@ -1,24 +1,181 @@
+function compare(a,b) {
+  if (a.newIndex < b.newIndex)
+    return -1;
+  if (a.newIndex > b.newIndex)
+    return 1;
+  return 0;
+}
+function readTextFilePromise(file) {
+  return new Promise(function(resolve, reject) {
+      readTextFile(file,resolve);
+  });
+}
+function readTextFile(file,callback)
+{
+    var rawFile = new XMLHttpRequest();
+    rawFile.open("GET", file, false);
+    rawFile.onreadystatechange = function ()
+    {
+        if(rawFile.readyState === 4)
+        {
+            if(rawFile.status === 200 || rawFile.status == 0)
+            {
+                var allText = rawFile.responseText;
+                callback(allText);
+            }
+        }
+    }
+    rawFile.send(null);
+}
+
 var menu=
 {
   exportNodejs:function(){
-    var output="";
-    var flow=LoadAndSave.prepareSave().flow;
-    for (let index = 0; index < flow.length; index++) {
-      const element = flow[index];
-      output+='var STRING_' + index + '="' + element.text + '";\n';
-    }
-    for (let index = 0; index < flow.length; index++) {
-      const element = flow[index];
-     
-      output+=`\nasync STEP_${index}(step){
-        return await step.prompt(NAME_PROMPT, STRING_${index}); //${element.text}
-      }\n`;
+    readTextFilePromise("templatenodejs.txt").then(function(template){
 
-      //if (element.parVar){
+    var flow=LoadAndSave.prepareSave().flow;
+    //ORDER ELEMENTS
+    var startElement=searchArray(flow,"START","type");
+    startElement.newIndex=1;
+
+    var index=1;
+    var goto=startElement;
+    do{
+      console.log(goto)
+      console.log(goto.next)
+      var next=Bot.getNext(goto.next,"");
+      if (!next){
+        if (goto.next.length>0)
+          next=goto.next[0].to;
+      }
+      console.log(next)
+      if (next){
+        var goto=searchArray(flow,next,"key")
+        console.log("GOTO:" + goto.key)
+        if (goto.newIndex)
+          next=null;
+        else{
+          index++;
+          goto.newIndex=index;
+        }
+      }
+    } while (next);
+
+  for (let i = 0; i < flow.length; i++) {
+    const element = flow[i];
+    if (!element.newIndex){
+      index++;
+      element.newIndex=index;
     }
-    var w=window.open("","");
-    w.document.write("<pre>" + output + "</pre>");
-    console.log(output);
+  }
+  
+  flow.sort(compare);
+  
+//  console.log(flow);
+
+      //CONSTANTS
+      var output="";
+      for (let index = 0; index < flow.length; index++) {
+        const element = flow[index];
+        output+='const STRING_' + element.newIndex + '="' + element.text.replace('\n','') + '";\n';
+      }
+      template=template.replace("###TEXTSTRINGS###",output);
+
+      //STEPS
+      output="";
+      var movenext="";
+      var functions="";
+      for (let index = 0; index < flow.length; index++) {
+        const element = flow[index];
+
+        var nextKey=Bot.getNext(element.next,"");
+        var nextElem=searchArray(flow,nextKey,"key");
+        var n="ERROR";
+        if (nextElem)
+          n=nextElem.newIndex;
+
+output+="//" + JSON.stringify(element) + "\n";
+movenext+="//" + JSON.stringify(element) + "\n";
+movenext+=`//${JSON.stringify(element.next)}\n`;
+
+        output+=`\n          case ${element.newIndex}:\n          `;
+        movenext+=`\n            case ${element.newIndex}:\n            `;
+
+        switch (element.type) {
+        case "CHOICE":
+          var s="";
+          var op="";
+          for (let i = 0; i < element.next.length; i++) {
+            const elementNext = element.next[i];
+            var t=searchArray(flow,elementNext.to,"key").newIndex;
+            s+="if (step.result==await this.ReplacePragmas(step,\"" + elementNext.text + "\")) userProfile.step=" + t + ";\n";
+            if (op!="") op+=",";
+            op+="await this.ReplacePragmas(step,'" + elementNext.text + "')";
+          }
+          output+=`   return await this.STEP_${element.newIndex}(step); //${element.text}\n`;
+          functions+=`\nasync STEP_${element.newIndex}(step) {
+            console.log("STEP_${element.newIndex}");
+            var reply = MessageFactory.suggestedActions([${op}], await this.ReplacePragmas(step,STRING_${element.newIndex}) );
+            return await step.prompt(NAME_PROMPT,reply); //${element.text}
+          }\n`;
+          movenext+=`userProfile.${element.parVar}=step.result;\n            ${s}\n            break;\n`;
+          break;
+        case "MESSAGE":
+        case "START":
+            output+=`   await step.context.sendActivity( await this.ReplacePragmas(step,STRING_${element.newIndex}) ); //${element.text}
+              return await step.next();\n`;
+            movenext+=`userProfile.step=${n};\n            break;\n`;
+            break;
+          case "INPUT":
+            output+=`   return await this.STEP_${element.newIndex}(step); //${element.text}\n`;
+            functions+=`\nasync STEP_${element.newIndex}(step) {
+              console.log("STEP_${element.newIndex}");
+              return await step.prompt(NAME_PROMPT, await this.ReplacePragmas(step,STRING_${element.newIndex}) ); //${element.text}
+            }\n`;
+//AQUI            
+            movenext+=`userProfile.${element.parVar}=step.result;\n            userProfile.step=${n};\n            break;\n`;
+            break;
+          case "IF":
+            var t=element.next[0].to;
+            var f=element.next[1].to;
+            if (element.next[0].text=="false")
+            {
+              f=element.next[0].to;
+              t=element.next[1].to;
+            }
+            t=searchArray(flow,t,"key").newIndex;
+            f=searchArray(flow,f,"key").newIndex;
+            output+="//IF\nreturn await step.next();\nbreak;\n";
+          movenext+=`if (await this.ReplacePragmas(step, "${element.parCon}"))
+            userProfile.step=${t}
+          else
+            userProfile.step=${f}
+          break;\n`;
+          break;
+          default:
+            output+=`   return await this.STEP_${element.newIndex}(step); //${element.text}\n`;
+            functions+=`\nasync STEP_${element.newIndex}(step) {
+              console.log("STEP_${element.newIndex}");
+              return await step.prompt(NAME_PROMPT, await this.ReplacePragmas(step,STRING_${element.newIndex}) ); //${element.text}
+            }\n`;
+            movenext+=`userProfile.step=${n};
+            break;\n`;
+          break;
+        }
+
+
+        //if (element.parVar){
+      }
+
+      template=template.replace("###FUNCTIONS###",functions);
+      template=template.replace("###MOVENEXT###",movenext);
+
+      template=template.replace("###STEPS###",output);
+      var w=window.open("","");
+      w.document.write("<pre>" + template + "</pre>");
+      console.log(output);
+  
+    });
   },
   exportCsharp:function(){
     var output="";
