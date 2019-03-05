@@ -1,11 +1,31 @@
 var menu=
 {
+  exportNodejs:function(){
+    var output="";
+    var flow=LoadAndSave.prepareSave().flow;
+    for (let index = 0; index < flow.length; index++) {
+      const element = flow[index];
+      output+='var STRING_' + index + '="' + element.text + '";\n';
+    }
+    for (let index = 0; index < flow.length; index++) {
+      const element = flow[index];
+     
+      output+=`\nasync STEP_${index}(step){
+        return await step.prompt(NAME_PROMPT, STRING_${index}); //${element.text}
+      }\n`;
+
+      //if (element.parVar){
+    }
+    var w=window.open("","");
+    w.document.write("<pre>" + output + "</pre>");
+    console.log(output);
+  },
   exportCsharp:function(){
     var output="";
     var flow=LoadAndSave.prepareSave().flow;
     for (let index = 0; index < flow.length; index++) {
       const element = flow[index];
-      output+='string STRING_' + index + '="' + element.text + '"\n';
+      output+='string STRING_' + index + '="' + element.text + '";\n';
     }
     for (let index = 0; index < flow.length; index++) {
       const element = flow[index];
@@ -31,7 +51,7 @@ var menu=
             output+=`
       },`;
     }
-    var csharpWindow=window.open("","CSHARP");
+    var csharpWindow=window.open("","");
     csharpWindow.document.write("<pre>" + output + "</pre>");
     console.log(output);
   },
