@@ -8,7 +8,9 @@ Create the Microsoft Bot Framework code (node or c#) automatically from the desi
 
 Play with it here: https://lambot.blob.core.windows.net/github/botconversationdesigner/index.html
 
-if you want to try some demo flows, when you press load load the url link instead of a local file: https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.botdesign 
+if you want to try some demo flows, when you press load load the url link instead of a local file: 
+
+https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.botdesign 
 
 ## Features
 - The conversation is synchronized with the visual designer

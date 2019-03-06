@@ -71,7 +71,9 @@ async MAINSTEP(step){
     async LOOP(step){
         console.log("LOOP");
         let userProfile = await this.userProfileAccessor.get(step.context);
+        var stepResult = step.result;
         userProfile.result=step.result;
+
         switch (userProfile.step) {
 ///MOVENEXT
 ###MOVENEXT###            
@@ -95,6 +97,22 @@ async MAINSTEP(step){
         }
         return text;
     }
+    addProp(userProfile,key,value)
+    {
+        userProfile[key]=value;
+    }
+    getProp(userProfile,key)
+    {
+        if (!userProfile[key])
+            return "";
+        else
+            return userProfile[key];
+    }
+    evalCondition(expression)
+    {
+        return eval(expression);
+    }
+
 }
 
 exports.MainDialog = Main;

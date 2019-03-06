@@ -2,7 +2,36 @@ var menu=
 {
   exportNodejs:function(){
     readTextFilePromise("templatenodejs.txt").then(function(template){
+      var CONTEXT_NEXT = "return await step.next();\n";
+      var STRING_DECLARATION="const ";
+      var SEND_ACTIVITY="step.context.sendActivity";
+      var STEP_DECLARATION="";
+      var FUNCTION_DECLARATION="async ";
+      var PROMPT_FUNCTION="prompt";
+      var PROMPT_CONVERSION="var promptoptions=text;";
+      var GETUSERPROFILE="let userProfile = await this.userProfileAccessor.get(step.context);\n";
+      var SUGGESTEDACTIONS="suggestedActions";
 
+      menu.exportcore(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS);
+
+    });
+  },
+  exportCsharp:function(){
+    readTextFilePromise("templatecsharp.txt").then(function(template){
+      var CONTEXT_NEXT = "return await step.NextAsync();\n";
+      var STRING_DECLARATION="public const string ";
+      var SEND_ACTIVITY="step.Context.SendActivityAsync";
+      var STEP_DECLARATION="WaterfallStepContext ";
+      var FUNCTION_DECLARATION="async Task&lt;DialogTurnResult>";
+      var PROMPT_FUNCTION="PromptAsync";
+      var PROMPT_CONVERSION="var promptoptions = new PromptOptions{Prompt = new Activity{Type = ActivityTypes.Message,Text = text,}};";
+      var GETUSERPROFILE="var userProfile = await UserProfileAccessor.GetAsync(step.Context, () => null);\n";
+      var SUGGESTEDACTIONS="SuggestedActions";
+
+      menu.exportcore(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS);
+      });
+    },
+  exportcore:function(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS){
     var flow=LoadAndSave.prepareSave().flow;
     //ORDER ELEMENTS
     var startElement=searchArray(flow,"START","type");
@@ -30,39 +59,39 @@ var menu=
         }
       }
     } while (next);
-
-  for (let i = 0; i < flow.length; i++) {
-    const element = flow[i];
-    if (!element.newIndex){
-      index++;
-      element.newIndex=index;
-    }
-  }
   
-  flow.sort(compare);
+    for (let i = 0; i < flow.length; i++) {
+      const element = flow[i];
+      if (!element.newIndex){
+        index++;
+        element.newIndex=index;
+      }
+    }
+    
+    flow.sort(compare);
   
 //  console.log(flow);
 
-      //CONSTANTS
-      var output="";
-      for (let index = 0; index < flow.length; index++) {
-        const element = flow[index];
-        output+='const STRING_' + element.newIndex + '="' + element.text.replace('\n','') + '";\n';
-      }
-      template=template.replace("###TEXTSTRINGS###",output);
+    //CONSTANTS
+    var output="";
+    for (let index = 0; index < flow.length; index++) {
+      const element = flow[index];
+      output+=STRING_DECLARATION + 'STRING_' + element.newIndex + '="' + element.text.replace('\n','') + '";\n';
+    }
+    template=template.replace("###TEXTSTRINGS###",output);
+  
+    //STEPS
+    output="";
+    var movenext="";
+    var functions="";
+    for (let index = 0; index < flow.length; index++) {
+      const element = flow[index];
 
-      //STEPS
-      output="";
-      var movenext="";
-      var functions="";
-      for (let index = 0; index < flow.length; index++) {
-        const element = flow[index];
-
-        var nextKey=Bot.getNext(element.next,"");
-        var nextElem=searchArray(flow,nextKey,"key");
-        var n="ERROR";
-        if (nextElem)
-          n=nextElem.newIndex;
+      var nextKey=Bot.getNext(element.next,"");
+      var nextElem=searchArray(flow,nextKey,"key");
+      var n="\"ERROR\"";
+      if (nextElem)
+        n=nextElem.newIndex;
 
 //output+="//" + JSON.stringify(element) + "\n";
 //movenext+="//" + JSON.stringify(element) + "\n";
@@ -73,15 +102,15 @@ var menu=
 
         switch (element.type) {
         case "API":
-          output+=`   return await step.next(); //${element.type}-${element.text}\n`;
+          output+=`   ${CONTEXT_NEXT}; //${element.type}-${element.text}\n`;
           movenext+=`userProfile.step=${n};\n            break;\n`;
           break;
         case "CARD":
           switch (element.parCar) {
             case "adaptiveCard":
-            output+=`   var card=${element.parCrd};
+            output+=`   var card=${replaceAll(element.parCrd,'\n','')};
             card=JSON.parse(await this.ReplacePragmas(step,JSON.stringify(card)));
-            await step.context.sendActivity({
+            await ${SEND_ACTIVITY}({
               text: await this.ReplacePragmas(step,STRING_${element.newIndex}),
               attachments: [CardFactory.adaptiveCard(card)]
                 });\n`;
@@ -98,38 +127,42 @@ var menu=
           for (let i = 0; i < element.next.length; i++) {
             const elementNext = element.next[i];
             var t=searchArray(flow,elementNext.to,"key").newIndex;
-            s+="if (step.result==await this.ReplacePragmas(step,\"" + elementNext.text + "\")) userProfile.step=" + t + ";\n";
+            s+="if (stepResult==await this.ReplacePragmas(step,\"" + elementNext.text + "\")) userProfile.step=" + t + ";\n";
             if (op!="") op+=",";
-            op+="await this.ReplacePragmas(step,'" + elementNext.text + "')";
+            op+="await this.ReplacePragmas(step,\"" + elementNext.text + "\")";
           }
           output+=`   return await this.STEP_${element.newIndex}(step); //${element.type}-${element.text}\n`;
-          functions+=`\nasync STEP_${element.newIndex}(step) {
-            var reply = MessageFactory.suggestedActions([${op}], await this.ReplacePragmas(step,STRING_${element.newIndex}) );
-            return await step.prompt(NAME_PROMPT,reply); //${element.type}-${element.text}
+          functions+=`\n${FUNCTION_DECLARATION} STEP_${element.newIndex}(${STEP_DECLARATION}step) {
+            var reply = MessageFactory.${SUGGESTEDACTIONS}([${op}], await this.ReplacePragmas(step,STRING_${element.newIndex}) );
+            return await step.${PROMPT_FUNCTION}(NAME_PROMPT,reply); //${element.type}-${element.text}
           }\n`;
-          movenext+=`userProfile.${element.parVar}=step.result;\n            ${s}\n            break;\n`;
+          movenext +=`this.addProp(userProfile,"${element.parVar}",stepResult);            ${s}\n            break;\n`;
           break;
         case "MESSAGE":
         case "START":
-            output+=`   await step.context.sendActivity( await this.ReplacePragmas(step,STRING_${element.newIndex}) ); //${element.type}-${element.text}
-              return await step.next();\n`;
+            output+=`   await ${SEND_ACTIVITY}( await this.ReplacePragmas(step,STRING_${element.newIndex}) ); //${element.type}-${element.text}
+              ${CONTEXT_NEXT}`;
             movenext+=`userProfile.step=${n};\n            break;\n`;
             break;
           case "INPUT":
             output+=`   return await this.STEP_${element.newIndex}(step); //${element.type}-${element.text}\n`;
-            functions+=`\nasync STEP_${element.newIndex}(step) {\n`;
+            functions+=`\n${FUNCTION_DECLARATION} STEP_${element.newIndex}(${STEP_DECLARATION}step) {\n;`;
             if (element.parCkv=="No"){
-              functions+=`let userProfile = await this.userProfileAccessor.get(step.context);
-              if (userProfile.${element.parVar})
-                return await step.next();
+              functions+=`${GETUSERPROFILE}
+              var text="";
+              if (this.getProp(userProfile,"${element.parVar}")!="")
+                ${CONTEXT_NEXT}
               else
-              `;
+                text=await this.ReplacePragmas(step,STRING_${element.newIndex});`;
             }
-            functions+=`return await step.prompt(NAME_PROMPT, await this.ReplacePragmas(step,STRING_${element.newIndex}) ); //${element.type}-${element.text}
+            else
+              functions+=`var text=await this.ReplacePragmas(step,STRING_${element.newIndex});\n`;
+            functions+=`${PROMPT_CONVERSION}
+              return await step.${PROMPT_FUNCTION}(NAME_PROMPT, promptoptions ); //${element.type}-${element.text}
               }\n`;
 //AQUI            
-            movenext+=`if (step.result)
-              userProfile.${element.parVar}=step.result;
+            movenext+=`if (stepResult!="")
+              this.addProp(userProfile,"${element.parVar}",stepResult);
               userProfile.step=${n};
             break;\n`;
             break;
@@ -143,18 +176,22 @@ var menu=
             }
             t=searchArray(flow,t,"key").newIndex;
             f=searchArray(flow,f,"key").newIndex;
-            output+="//IF\nreturn await step.next();\nbreak;\n";
-          movenext+=`if (await this.ReplacePragmas(step, "${element.parCon}"))
-            userProfile.step=${t}
-          else
-            userProfile.step=${f}
-          break;\n`;
+            output+=`//IF\n${CONTEXT_NEXT}`;
+            movenext+=`var expression="${replaceAll(element.parCon,"\"","\\\"")}"; 
+            expression=await this.ReplacePragmas(step, expression);
+            if (this.evalCondition(expression))
+              userProfile.step=${t};
+            else
+              userProfile.step=${f};
+            break;\n`;
           break;
           default:
             output+=`   return await this.STEP_${element.newIndex}(step); //${element.type}-${element.text}\n`;
             //console.log("STEP_${element.newIndex}");
-            functions+=`\nasync STEP_${element.newIndex}(step) {
-              return await step.prompt(NAME_PROMPT, await this.ReplacePragmas(step,STRING_${element.newIndex}) ); //${element.type}-${element.text}
+            functions+=`\n${FUNCTION_DECLARATION} STEP_${element.newIndex}(${STEP_DECLARATION}step) {
+              var text=await this.ReplacePragmas(step,STRING_${element.newIndex});
+              ${PROMPT_CONVERSION}
+              return await step.${PROMPT_FUNCTION}(NAME_PROMPT, promptoptions ); //${element.type}-${element.text}
             }\n`;
             movenext+=`userProfile.step=${n};
             break;\n`;
@@ -172,43 +209,6 @@ var menu=
       var w=window.open("","");
       w.document.write("<pre>" + template + "</pre>");
       console.log(output);
-  
-    });
-  },
-  exportCsharp:function(){
-    var output="";
-    var flow=LoadAndSave.prepareSave().flow;
-    for (let index = 0; index < flow.length; index++) {
-      const element = flow[index];
-      output+='string STRING_' + index + '="' + element.text + '";\n';
-    }
-    for (let index = 0; index < flow.length; index++) {
-      const element = flow[index];
-      
-      output+=`async (stepContext, ct) =>{
-        `;
-      if (element.parVar){
-        output+=`
-          if(string.IsNullOrEmpty(stepContext.Values["${element.parVar}"].ToString())) {
-          `;
-      }
-      output+=`
-        return await stepContext.PromptAsync("TextPrompt",
-              new PromptOptions {
-                   Prompt = MessageFactory.Text(STRING_${index}), //${element.text}
-              },
-              ct
-            ).ConfigureAwait(false);`;
-            if (element.parVar)
-            {
-              output+=`} else { return await stepContext.NextAsync(stepContext.Values[${element.parvar}].ToString(), ct); }`;
-            }
-            output+=`
-      },`;
-    }
-    var csharpWindow=window.open("","");
-    csharpWindow.document.write("<pre>" + output + "</pre>");
-    console.log(output);
   },
   new:function() {
     myDiagram.model=go.Model.fromJson("{}")
@@ -649,13 +649,20 @@ var Bot={
                 bSendMessage=false;
               }
               if (goto.type=="INPUT"){
+                console.log("INPUT")
+                console.log(goto.type)
                 if (goto.parCkv=="No" && Bot.userData[goto.parVar]){
+                  console.log("DO NOT SHOW")
                   bSendMessage=false;
                   condition=true;
                 }
               }
-              if (bSendMessage)  
+              if (bSendMessage){
+                console.log("SHOW")
+                console.log(goto)
                 messages.push(goto);
+
+              }
               
               myDiagram.select(myDiagram.findNodeForKey(nxt));
 
@@ -809,4 +816,7 @@ function readTextFile(file,callback)
     }
     rawFile.send(null);
 }
+function replaceAll(text, search, replacement) {
+  return text.replace(new RegExp(search, 'g'), replacement);
+};
 //#endregion

@@ -1,0 +1,148 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+// DEPLOYMENT INSTRUCTIONS:
+// 1. GET FULL NODE PROJECT FROM: https://github.com/luisalvesmartins/botconversationdesigner/tree/master/botcode/csharp
+// 2. REPLACE THE FILE DIALOGS/MAIN.JS WITH THIS CONTENT 
+// 3. RUN THE BOT
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Bot.Schema;
+using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Extensions.Logging;
+using Microsoft.CodeAnalysis.CSharp.Scripting;
+
+namespace sample
+{
+    /// <summary>
+    /// Demonstrates the following concepts:
+    /// - Use a subclass of ComponentDialog to implement a multi-turn conversation
+    /// - Use a Waterflow dialog to model multi-turn conversation flow
+    /// - Use custom prompts to validate user input
+    /// - Store conversation and user state.
+    /// </summary>
+    public class MainDialog : ComponentDialog
+    {
+        public string MAIN_DIALOG = "mainDialog";
+        public string NAME_PROMPT = "namePrompt";
+
+// TEXT STRINGS
+###TEXTSTRINGS###
+
+
+        // Dialog IDs
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GreetingDialog"/> class.
+        /// </summary>
+        /// <param name="botServices">Connected services used in processing.</param>
+        /// <param name="botState">The <see cref="UserState"/> for storing properties at user-scope.</param>
+        /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> that enables logging and tracing.</param>
+        public MainDialog(IStatePropertyAccessor&lt;userState> userProfileStateAccessor, ILoggerFactory loggerFactory)
+            : base(nameof(MainDialog))
+        {
+            UserProfileAccessor = userProfileStateAccessor ?? throw new ArgumentNullException(nameof(userProfileStateAccessor));
+
+            // Add control flow dialogs
+            AddDialog(new WaterfallDialog(MAIN_DIALOG,new WaterfallStep[]
+                                                    {
+                                                            MAINSTEP,
+                                                            LOOP
+                                                    }
+                    ));
+            AddDialog(new TextPrompt(NAME_PROMPT));
+        }
+
+        public IStatePropertyAccessor&lt;userState> UserProfileAccessor { get; }
+
+        private async Task&lt;DialogTurnResult> MAINSTEP(WaterfallStepContext step, CancellationToken cancellationToken)
+        {
+            var userProfile= await UserProfileAccessor.GetAsync(step.Context, () => null);
+            if (userProfile == null)
+            {
+                userProfile = new userState() { step = 1, props=new Dictionary&lt;string, string>() };
+                await UserProfileAccessor.SetAsync(step.Context, userProfile);
+            }
+            var stepNumber = userProfile.step;
+
+            switch (stepNumber) {
+//STEPS
+###STEPS###    
+                    default:
+                        userProfile.step=1;
+                        await UserProfileAccessor.SetAsync(step.Context, userProfile);
+                        return await step.NextAsync();
+                }
+
+            return await step.NextAsync();
+        }
+
+        private async Task&lt;DialogTurnResult> LOOP(WaterfallStepContext step,CancellationToken cancellationToken)
+        {
+            var userProfile = await UserProfileAccessor.GetAsync(step.Context, () => null);
+            var stepResult = (string)step.Result;
+
+            switch (userProfile.step) {
+///MOVENEXT
+###MOVENEXT###            
+        
+                default:
+                    break;
+            }
+
+
+            await UserProfileAccessor.SetAsync(step.Context, userProfile);
+            return await step.ReplaceDialogAsync(MAIN_DIALOG);
+        }
+
+///FUNCTIONS
+###FUNCTIONS###    
+
+        async Task&lt;string> ReplacePragmas(WaterfallStepContext step, string text)
+        {
+            var userProfile = await UserProfileAccessor.GetAsync(step.Context, () => null);
+            foreach (KeyValuePair&lt;string,string> item in userProfile.props)
+            {
+                text = text.Replace("{" + item.Key + "}", item.Value);
+            } 
+            return text;
+        }
+
+        void addProp(userState userProfile, string key, string value)
+        {
+            if (userProfile.props.ContainsKey(key))
+                userProfile.props[key] = value;
+            else
+                userProfile.props.Add(key, value);
+        }
+
+        string getProp(userState userProfile,string key)
+        {
+            return userProfile.props[key];
+        }
+
+        bool evalCondition(string expression)
+        {
+            bool Res = false;
+            try {
+                var result = CSharpScript.EvaluateAsync(expression).Result;
+
+                if (result.GetType().Name == "String")
+                    Res = true;
+                else
+                {
+                    Res = ((bool)result);
+                }
+            }
+            catch (Exception)
+            {
+                Res = false;
+            }
+            return Res;
+        }
+
+    }
+}

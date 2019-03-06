@@ -27,7 +27,7 @@
                 <button onclick="menu.save()">Save</button>
                 <button onclick="menu.load()">Load</button><input type="file" id="fileToLoad" style="display:none">
                 <button onclick="menu.PlayStep()">Play From Step</button>
-                <button onclick="menu.exportCsharp()" style="margin-left: 20px;display:none">Export to C#</button>
+                <button onclick="menu.exportCsharp()" style="margin-left: 20px;">Export to C#</button>
                 <button onclick="menu.exportNodejs()">Export to Node</button>
             </div>
             <div class="godiag">
@@ -94,6 +94,15 @@ function init()
     }
     goDiagram();
     $('#fileToLoad').change(menu.handleFileSelect);
+
+    //LOAD INITIAL BOT
+    var model={"flow":[{"key":"1","text":"I am the Echo Bot Sample","type":"START","next":[{"to":-2,"text":""}]},{"key":-2,"text":"Please shout something","type":"INPUT","next":[{"to":-5,"text":""}],"parVar":"SHOUT","parTyp":"","parCkv":"Yes"},{"key":-5,"text":"You said: {SHOUT}","type":"MESSAGE","next":[{"to":-4,"text":""}]},{"key":-4,"text":"Check if you are saying ECHO","type":"IF","next":[{"to":-6,"text":"true"},{"to":-2,"text":"false"}],"parCon":"\"{SHOUT}\"==\"ECHO\""},{"key":-6,"text":"ECHO... ECHO... ECHO...","type":"MESSAGE","next":[{"to":-2,"text":""}]}],"diagram":{"class":"go.GraphLinksModel","modelData":{"position":"-5 107.50000000000011"},"nodeDataArray":[{"text":"I am the Echo Bot Sample","figure":"Circle","fill":"#00AD5F","type":"START","key":"1","loc":"148.50436179582462 63.50436179582462","size":"106 96"},{"text":"Please shout something","type":"INPUT","key":-2,"loc":"140 160","parVar":"SHOUT","parTyp":"","parCkv":"Yes"},{"text":"You said: {SHOUT}","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-5,"loc":"140 260"},{"text":"Check if you are saying ECHO","figure":"Diamond","fill":"lightskyblue","type":"IF","key":-4,"loc":"140 380","size":"210 129","parCon":"\"{SHOUT}\"==\"ECHO\""},{"text":"ECHO... ECHO... ECHO...","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-6,"loc":"390 380"}],"linkDataArray":[{"from":"1","to":-2,"points":[143.50436179582462,111.50436179582462,143.50436179582462,121.50436179582462,143.50436179582462,128.0021808979123,140,128.0021808979123,140,134.5,140,144.5]},{"from":-2,"to":-5,"points":[140,175.5,140,185.5,140,208.61928812542303,140,208.61928812542303,140,231.73857625084605,140,241.73857625084605]},{"from":-5,"to":-4,"points":[140,278.26142374915394,140,288.26142374915394,140,296.88071187457706,140,296.88071187457706,140,305.5000000000001,140,315.5000000000001]},{"from":-4,"to":-6,"points":[245,380.0000000000001,255,380.0000000000001,276.45928827801094,380.0000000000001,276.45928827801094,380,297.91857655602183,380,307.91857655602183,380],"text":"true"},{"from":-6,"to":-2,"points":[390,361.73857625084605,390,351.73857625084605,390,160,308.99749755859375,160,227.9949951171875,160,217.9949951171875,160]},{"from":-4,"to":-2,"points":[35,380.0000000000001,25,380.0000000000001,25,160,38.50250244140625,160,52.0050048828125,160,62.0050048828125,160],"text":"false"}]}};
+    myDiagram.model = go.Model.fromJson(model.diagram);
+    LoadAndSave.loadDiagramProperties();
+    Bot.userData={};
+    myDiagram.select(myDiagram.findNodeForKey("1"));
+    menu.PlayStep();
+
 }        
 </script>
 <!-- Global site tag (gtag.js) - Google Analytics -->
