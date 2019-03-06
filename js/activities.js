@@ -636,8 +636,6 @@ var Bot={
             var text=activity.text;
             if (a.type=="IF")
             {
-              //evaluate a.text
-              //replace text with result
               text=Bot.ReplacePragmas(a.parCon)
               text=eval(text).toString();
             }
@@ -646,9 +644,19 @@ var Bot={
             if (nxt)
             {
               var goto=searchArray(flow,nxt,"key")
-              if (goto.type!="IF"){
-                messages.push(goto);
+              var bSendMessage=true;
+              if (goto.type=="IF"){
+                bSendMessage=false;
               }
+              if (goto.type=="INPUT"){
+                if (goto.parCkv=="No" && Bot.userData[goto.parVar]){
+                  bSendMessage=false;
+                  condition=true;
+                }
+              }
+              if (bSendMessage)  
+                messages.push(goto);
+              
               myDiagram.select(myDiagram.findNodeForKey(nxt));
 
               var a=searchArray(flow,nxt,"key")
