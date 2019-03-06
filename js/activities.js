@@ -1,33 +1,3 @@
-function compare(a,b) {
-  if (a.newIndex < b.newIndex)
-    return -1;
-  if (a.newIndex > b.newIndex)
-    return 1;
-  return 0;
-}
-function readTextFilePromise(file) {
-  return new Promise(function(resolve, reject) {
-      readTextFile(file,resolve);
-  });
-}
-function readTextFile(file,callback)
-{
-    var rawFile = new XMLHttpRequest();
-    rawFile.open("GET", file, false);
-    rawFile.onreadystatechange = function ()
-    {
-        if(rawFile.readyState === 4)
-        {
-            if(rawFile.status === 200 || rawFile.status == 0)
-            {
-                var allText = rawFile.responseText;
-                callback(allText);
-            }
-        }
-    }
-    rawFile.send(null);
-}
-
 var menu=
 {
   exportNodejs:function(){
@@ -94,14 +64,34 @@ var menu=
         if (nextElem)
           n=nextElem.newIndex;
 
-output+="//" + JSON.stringify(element) + "\n";
-movenext+="//" + JSON.stringify(element) + "\n";
-movenext+=`//${JSON.stringify(element.next)}\n`;
+//output+="//" + JSON.stringify(element) + "\n";
+//movenext+="//" + JSON.stringify(element) + "\n";
+//movenext+=`//${JSON.stringify(element.next)}\n`;
 
         output+=`\n          case ${element.newIndex}:\n          `;
         movenext+=`\n            case ${element.newIndex}:\n            `;
 
         switch (element.type) {
+        case "API":
+          output+=`   return await step.next(); //${element.type}-${element.text}\n`;
+          movenext+=`userProfile.step=${n};\n            break;\n`;
+          break;
+        case "CARD":
+          switch (element.parCar) {
+            case "adaptiveCard":
+            output+=`   var card=${element.parCrd};
+            card=JSON.parse(await this.ReplacePragmas(step,JSON.stringify(card)));
+            await step.context.sendActivity({
+              text: await this.ReplacePragmas(step,STRING_${element.newIndex}),
+              attachments: [CardFactory.adaptiveCard(card)]
+                });\n`;
+              break;
+         
+            default:
+              break;
+          }
+          movenext+=`userProfile.step=${n};\n            break;\n`;
+          break;
         case "CHOICE":
           var s="";
           var op="";
@@ -112,25 +102,23 @@ movenext+=`//${JSON.stringify(element.next)}\n`;
             if (op!="") op+=",";
             op+="await this.ReplacePragmas(step,'" + elementNext.text + "')";
           }
-          output+=`   return await this.STEP_${element.newIndex}(step); //${element.text}\n`;
+          output+=`   return await this.STEP_${element.newIndex}(step); //${element.type}-${element.text}\n`;
           functions+=`\nasync STEP_${element.newIndex}(step) {
-            console.log("STEP_${element.newIndex}");
             var reply = MessageFactory.suggestedActions([${op}], await this.ReplacePragmas(step,STRING_${element.newIndex}) );
-            return await step.prompt(NAME_PROMPT,reply); //${element.text}
+            return await step.prompt(NAME_PROMPT,reply); //${element.type}-${element.text}
           }\n`;
           movenext+=`userProfile.${element.parVar}=step.result;\n            ${s}\n            break;\n`;
           break;
         case "MESSAGE":
         case "START":
-            output+=`   await step.context.sendActivity( await this.ReplacePragmas(step,STRING_${element.newIndex}) ); //${element.text}
+            output+=`   await step.context.sendActivity( await this.ReplacePragmas(step,STRING_${element.newIndex}) ); //${element.type}-${element.text}
               return await step.next();\n`;
             movenext+=`userProfile.step=${n};\n            break;\n`;
             break;
           case "INPUT":
-            output+=`   return await this.STEP_${element.newIndex}(step); //${element.text}\n`;
+            output+=`   return await this.STEP_${element.newIndex}(step); //${element.type}-${element.text}\n`;
             functions+=`\nasync STEP_${element.newIndex}(step) {
-              console.log("STEP_${element.newIndex}");
-              return await step.prompt(NAME_PROMPT, await this.ReplacePragmas(step,STRING_${element.newIndex}) ); //${element.text}
+              return await step.prompt(NAME_PROMPT, await this.ReplacePragmas(step,STRING_${element.newIndex}) ); //${element.type}-${element.text}
             }\n`;
 //AQUI            
             movenext+=`userProfile.${element.parVar}=step.result;\n            userProfile.step=${n};\n            break;\n`;
@@ -153,10 +141,10 @@ movenext+=`//${JSON.stringify(element.next)}\n`;
           break;\n`;
           break;
           default:
-            output+=`   return await this.STEP_${element.newIndex}(step); //${element.text}\n`;
+            output+=`   return await this.STEP_${element.newIndex}(step); //${element.type}-${element.text}\n`;
+            //console.log("STEP_${element.newIndex}");
             functions+=`\nasync STEP_${element.newIndex}(step) {
-              console.log("STEP_${element.newIndex}");
-              return await step.prompt(NAME_PROMPT, await this.ReplacePragmas(step,STRING_${element.newIndex}) ); //${element.text}
+              return await step.prompt(NAME_PROMPT, await this.ReplacePragmas(step,STRING_${element.newIndex}) ); //${element.type}-${element.text}
             }\n`;
             movenext+=`userProfile.step=${n};
             break;\n`;
@@ -347,7 +335,7 @@ function showDataNodes(data){
         var name=ParameterList[f].name;
         if (document.all(name))
         {
-            console.log(name + "->" + document.all(name).type)
+            //console.log(name + "->" + document.all(name).type)
             data[name]=document.all(name).value;
         }
           
@@ -365,16 +353,17 @@ function showDataNodes(data){
   }
 
 var ParameterList=[
-    {name:"parVar", default:""},
+    {name:"parVar", default:""}, //Variable
     {name:"parURL", default:"https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/"},
     {name:"parKey", default:"guid?subscription-key=code"},
-    {name:"parTyp", default:""},
-    {name:"parLMI", default:"0.5"},
-    {name:"parPar", default:""},
-    {name:"parCon", default:""},
-    {name:"parCar", default:""},
-    {name:"parAPI", default:""},
-    {name:"parAPO", default:""}
+    {name:"parTyp", default:""}, //Type
+    {name:"parLMI", default:"0.5"}, //LUIS Minimum
+    {name:"parPar", default:""}, //Parameters
+    {name:"parCon", default:""}, //Condition
+    {name:"parCar", default:""}, //Card
+    {name:"parAPI", default:""}, //API name
+    {name:"parAPO", default:""}, //API Output
+    {name:"parCrd", default:""} //Card Definition
   ];
 
   function GetFieldList(dataType){
@@ -384,7 +373,7 @@ var ParameterList=[
         Fields=[{name:"parVar"},{name:"parAPI"},{name:"parPar"},{name:"parAPO"}]
         break;
       case "CARD":
-        Fields=[{name:"parVar"},{name:"parCar"}]
+        Fields=[{name:"parVar"},{name:"parCar"},{name:"parCrd"}]
         break;
       case "CHOICE":
         Fields=[{name:"parVar"}]
@@ -425,6 +414,9 @@ var ParameterList=[
         var field=Fields[f];
         sHTML+="<div id=t_" + field.name + ">";
         switch (field.name) {
+          case "parCrd":
+            sHTML+="Card Definition</div><TEXTAREA id=parCrd onkeyup='parSave()' rows=12 cols=21 style='width:180px'></TEXTAREA>"
+            break;
           case "parVar":
             sHTML+="VARIABLE</div><INPUT type=text id=parVar onkeyup='parSave()' style='width:180px'>"
             break;
@@ -518,7 +510,8 @@ var LoadAndSave={
           }
           botObject.push({ key: gO.key, text: gO.text, type: gO.type, next:toLink, 
                   parVar:gO.parVar, parURL:gO.parURL, parKey:gO.parKey, parTyp:gO.parTyp, parLMI:gO.parLMI,
-                  parCon:gO.parCon, parPar:gO.parPar, parCar:gO.parCar, parAPI:gO.parAPI, parAPO:gO.parAPO
+                  parCon:gO.parCon, parPar:gO.parPar, parCar:gO.parCar, parAPI:gO.parAPI, parAPO:gO.parAPO,
+                  parCrd:gO.parCrd
               })
       }
       return botObject;
@@ -722,3 +715,34 @@ var Bot={
   DirectLineEmulator.emptyActivity=message;
   }
 }
+
+function compare(a,b) {
+  if (a.newIndex < b.newIndex)
+    return -1;
+  if (a.newIndex > b.newIndex)
+    return 1;
+  return 0;
+}
+function readTextFilePromise(file) {
+  return new Promise(function(resolve, reject) {
+      readTextFile(file,resolve);
+  });
+}
+function readTextFile(file,callback)
+{
+    var rawFile = new XMLHttpRequest();
+    rawFile.open("GET", file, false);
+    rawFile.onreadystatechange = function ()
+    {
+        if(rawFile.readyState === 4)
+        {
+            if(rawFile.status === 200 || rawFile.status == 0)
+            {
+                var allText = rawFile.responseText;
+                callback(allText);
+            }
+        }
+    }
+    rawFile.send(null);
+}
+

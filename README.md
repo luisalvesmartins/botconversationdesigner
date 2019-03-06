@@ -4,6 +4,8 @@
 
 Design and debug visually your bot conversations.
 
+Create the Microsoft Bot Framework code (node or c#) automatically from the designer.
+
 Play with it here: https://lambot.blob.core.windows.net/github/botconversationdesigner/index.html
 
 ## Features

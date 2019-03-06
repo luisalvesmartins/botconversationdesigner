@@ -1,9 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// DEPLOYMENT INSTRUCTIONS:
+// 1. GET FULL NODE PROJECT FROM: https://github.com/luisalvesmartins/botconversationdesigner/tree/master/botcode/nodejs
+// 2. REPLACE THE FILE DIALOGS/MAIN.JS WITH THIS CONTENT 
+// 3. RUN THE BOT
+
 // Import required Bot Builder
 const { ComponentDialog, WaterfallDialog, TextPrompt } = require('botbuilder-dialogs');
-const { MessageFactory } = require('botbuilder');
+const { MessageFactory, CardFactory } = require('botbuilder');
 
 // Dialog IDs
 const MAIN_DIALOG = 'mainDialog';
@@ -48,7 +53,6 @@ async MAINSTEP(step){
     }
 
     var stepNumber=userProfile.step;
-    console.log("AQUI")
     //SAVE step
     await this.userProfileAccessor.set(step.context, userProfile);
 
