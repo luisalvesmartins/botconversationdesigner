@@ -225,9 +225,10 @@ var menu=
   load:function(){
 
     $('#fileToLoad').focus().click();
-
+    //document.getElementById('fileToLoad').addEventListener('change', menu.handleFileSelect, false);
+  },
+  handleFileSelect:function(){
     var fileToLoad = document.getElementById("fileToLoad").files[0];
- 
     var fileReader = new FileReader();
     fileReader.onload = function(fileLoadedEvent) 
     {
@@ -237,8 +238,9 @@ var menu=
 
         myDiagram.model = go.Model.fromJson(model.diagram);
         LoadAndSave.loadDiagramProperties();
+        Bot.userData={};
     };
-    fileReader.readAsText(fileToLoad, "UTF-8");
+    fileReader.readAsText(fileToLoad, "UTF-8");   
   },
   PlayStep:function(){
     if (myDiagram.selection.count>0){
@@ -572,6 +574,7 @@ var Bot={
       console.log(activity);
       console.log("userData")
       console.log(Bot.userData)
+      $("#userdatavalue").html(JSON.stringify(Bot.userData));
       if (activity.text.toUpperCase().startsWith("BOT:"))
       {
         var message=activity.text.substr(4);
@@ -582,7 +585,7 @@ var Bot={
           var x=myDiagram.selection.first().part.location.x;
           var y=myDiagram.selection.first().part.location.y;
           y=y+60;
-          myDiagram.model.addNodeData({"text":message,"type":"Input", "key": Bot.key, "loc":x + " " + y});
+          myDiagram.model.addNodeData({"text":message,"type":"INPUT", "key": Bot.key, "loc":x + " " + y});
           myDiagram.select(myDiagram.findNodeForKey(Bot.key));
     
           myDiagram.model.addLinkData({ from: key, to: Bot.key });
@@ -592,7 +595,7 @@ var Bot={
           if (myDiagram.model.nodeDataArray.length==0)
             myDiagram.model.addNodeData({"text":message,"type":"START", "figure":"Circle","fill":"#00AD5F","key": Bot.key});
           else
-            myDiagram.model.addNodeData({"text":message,"type":"Input", "key": Bot.key});
+            myDiagram.model.addNodeData({"text":message,"type":"INPUT", "key": Bot.key});
           myDiagram.select(myDiagram.findNodeForKey(Bot.key));
         }
       }
@@ -612,11 +615,22 @@ var Bot={
           var messages=[];
           do {
             condition=false;
-            var nxt=Bot.getNext(a.next,activity.text);
+            var text=activity.text;
+            if (a.type=="IF")
+            {
+              //evaluate a.text
+              //replace text with result
+              text=Bot.ReplacePragmas(a.parCon)
+              text=eval(text).toString();
+            }
+
+            var nxt=Bot.getNext(a.next,text);
             if (nxt)
             {
               var goto=searchArray(flow,nxt,"key")
-              messages.push(goto);
+              if (goto.type!="IF"){
+                messages.push(goto);
+              }
               myDiagram.select(myDiagram.findNodeForKey(nxt));
 
               var a=searchArray(flow,nxt,"key")
@@ -628,6 +642,7 @@ var Bot={
               messages.push({type:"MESSAGE", text:"<end of flow>"});
             }
           } while (condition);
+          $("#userdatavalue").html(JSON.stringify(Bot.userData));
           Bot.sendBotMessage(messages);
         }
         else
@@ -656,7 +671,6 @@ var Bot={
           const element = nextOptions[i];
 
           if (element.text==message) {
-            console.log("FOUND:" + element.to);
             return element.to;
           }
         }
@@ -684,12 +698,12 @@ var Bot={
           extension={"suggestedActions": {"actions":actions}};
           break;
         case "IF":
-          var actions=[];
-          flowItem.next.forEach(element => {
-            var t=Bot.ReplacePragmas(element.text);
-            actions.push({title:t, type:"imBack", value:t});
-          });
-          extension={"suggestedActions": {"actions":actions}};
+          // var actions=[];
+          // flowItem.next.forEach(element => {
+          //   var t=Bot.ReplacePragmas(element.text);
+          //   actions.push({title:t, type:"imBack", value:t});
+          // });
+          // extension={"suggestedActions": {"actions":actions}};
           break;
         case "LUIS":
           var actions=[];
@@ -739,6 +753,7 @@ var Bot={
 }
 }
 
+//#region HELPERS
 function compare(a,b) {
   if (a.newIndex < b.newIndex)
     return -1;
@@ -768,4 +783,4 @@ function readTextFile(file,callback)
     }
     rawFile.send(null);
 }
-
+//#endregion
