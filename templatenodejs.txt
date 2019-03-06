@@ -72,7 +72,6 @@ async MAINSTEP(step){
         console.log("LOOP");
         let userProfile = await this.userProfileAccessor.get(step.context);
         userProfile.result=step.result;
-        var old=userProfile.step;
         switch (userProfile.step) {
 ///MOVENEXT
 ###MOVENEXT###            

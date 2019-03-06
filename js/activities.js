@@ -117,11 +117,21 @@ var menu=
             break;
           case "INPUT":
             output+=`   return await this.STEP_${element.newIndex}(step); //${element.type}-${element.text}\n`;
-            functions+=`\nasync STEP_${element.newIndex}(step) {
-              return await step.prompt(NAME_PROMPT, await this.ReplacePragmas(step,STRING_${element.newIndex}) ); //${element.type}-${element.text}
-            }\n`;
+            functions+=`\nasync STEP_${element.newIndex}(step) {\n`;
+            if (element.parCkv=="No"){
+              functions+=`let userProfile = await this.userProfileAccessor.get(step.context);
+              if (userProfile.${element.parVar})
+                return await step.next();
+              else
+              `;
+            }
+            functions+=`return await step.prompt(NAME_PROMPT, await this.ReplacePragmas(step,STRING_${element.newIndex}) ); //${element.type}-${element.text}
+              }\n`;
 //AQUI            
-            movenext+=`userProfile.${element.parVar}=step.result;\n            userProfile.step=${n};\n            break;\n`;
+            movenext+=`if (step.result)
+              userProfile.${element.parVar}=step.result;
+              userProfile.step=${n};
+            break;\n`;
             break;
           case "IF":
             var t=element.next[0].to;
@@ -365,7 +375,8 @@ var ParameterList=[
     {name:"parCar", default:""}, //Card
     {name:"parAPI", default:""}, //API name
     {name:"parAPO", default:""}, //API Output
-    {name:"parCrd", default:""} //Card Definition
+    {name:"parCrd", default:""}, //Card Definition
+    {name:"parCkv", default:"yes"} //Check if variable exists
   ];
 
   function GetFieldList(dataType){
@@ -380,11 +391,14 @@ var ParameterList=[
       case "CHOICE":
         Fields=[{name:"parVar"}]
         break;
+      case "DIALOG":
+        Fields=[{name:"parAPI", title:"Dialog Name"}]
+        break;
       case "IF":
         Fields=[{name:"parCon"}]
         break;
       case "INPUT":
-        Fields=[{name:"parVar"},{name:"parTyp"}]
+        Fields=[{name:"parVar"},{name:"parTyp"},{name:"parCkv"}]
         break;
       case "LUIS":
         Fields=[{name:"parVar"},
@@ -439,6 +453,12 @@ var ParameterList=[
             break;
           case "parCon":
             sHTML+="Condition</div><TEXTAREA id=parCon onkeyup='parSave()' rows=6 cols=21 style='width:180px'></TEXTAREA>"
+            break;
+          case "parCkv":
+            sHTML+="Prompt even if variable already defined</div><SELECT id=parCkv onkeyup='parSave()' onchange='parSave()'>" +
+            "<option>Yes</option>" + 
+            "<option>No</option>" + 
+            "</select>";
             break;
           case "parCar":
             sHTML+="Card</div><SELECT id=parCar onkeyup='parSave()' onchange='parSave()'>" +
@@ -513,7 +533,7 @@ var LoadAndSave={
           botObject.push({ key: gO.key, text: gO.text, type: gO.type, next:toLink, 
                   parVar:gO.parVar, parURL:gO.parURL, parKey:gO.parKey, parTyp:gO.parTyp, parLMI:gO.parLMI,
                   parCon:gO.parCon, parPar:gO.parPar, parCar:gO.parCar, parAPI:gO.parAPI, parAPO:gO.parAPO,
-                  parCrd:gO.parCrd
+                  parCrd:gO.parCrd, parCkv:gO.parCkv
               })
       }
       return botObject;
@@ -570,10 +590,8 @@ var Bot={
   userData:{},
   receiveMessage:function(activity){
     if (activity!=Bot.lastActivity){
-      console.log("USER ACTIVITY:")
-      console.log(activity);
-      console.log("userData")
-      console.log(Bot.userData)
+      // console.log("USER ACTIVITY:")
+      // console.log(activity);
       $("#userdatavalue").html(JSON.stringify(Bot.userData));
       if (activity.text.toUpperCase().startsWith("BOT:"))
       {

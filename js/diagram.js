@@ -225,7 +225,8 @@ function goDiagram(){
             { text: "LUIS", figure: "RoundedRectangle", fill: "lightgreen", type:"LUIS" },
             { text: "QNA", figure: "RoundedRectangle", fill: "#77CC77", type:"QNA" },
             { text: "API", figure: "RoundedRectangle", fill: "#FF7777", type:"API" },
-            { text: "Card", type:"CARD" }
+            { text: "Card", type:"CARD",fill: "lightyellow" },
+            { text: "Dialog", type:"DIALOG", figure: "RoundedRectangle", fill: "#FFdddd" }
           ], [
             // the Palette also has a disconnected Link, which the user can drag-and-drop
             { points: new go.List(go.Point).addAll([new go.Point(0, 0), new go.Point(30, 0), new go.Point(30, 40), new go.Point(60, 40)]) }
