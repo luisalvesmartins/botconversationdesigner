@@ -565,10 +565,13 @@ var Bot={
     },extension)]};
     DirectLineEmulator.emptyActivity=message;
   },
+  userData:{},
   receiveMessage:function(activity){
     if (activity!=Bot.lastActivity){
       console.log("USER ACTIVITY:")
       console.log(activity);
+      console.log("userData")
+      console.log(Bot.userData)
       if (activity.text.toUpperCase().startsWith("BOT:"))
       {
         var message=activity.text.substr(4);
@@ -602,6 +605,10 @@ var Bot={
           var key=myDiagram.selection.first().key;
           var a=searchArray(flow,key,"key")
   
+          if (a.parVar){
+            Bot.userData[a.parVar]=activity.text;
+          }
+
           var messages=[];
           do {
             condition=false;
@@ -613,7 +620,7 @@ var Bot={
               myDiagram.select(myDiagram.findNodeForKey(nxt));
 
               var a=searchArray(flow,nxt,"key")
-              if (a.type=="MESSAGE" || a.type=="START")
+              if (a.type=="MESSAGE" || a.type=="START" || a.type=="API" || a.type=="IF")
                 condition=true;
             }
             else
@@ -661,26 +668,34 @@ var Bot={
     for (let i = 0; i < flowItems.length; i++) {
       const flowItem = flowItems[i];
       
+      
       var extension;
       switch (flowItem.type) {
+        case "CARD":
+          extension={"attachments": [JSON.parse(flowItem.parCrd)]};
+          console.log(extension);
+          break;
         case "CHOICE":
           var actions=[];
           flowItem.next.forEach(element => {
-            actions.push({title:element.text, type:"imBack", value:element.text});
+            var t=Bot.ReplacePragmas(element.text);
+            actions.push({title:t, type:"imBack", value:t});
           });
           extension={"suggestedActions": {"actions":actions}};
           break;
         case "IF":
           var actions=[];
           flowItem.next.forEach(element => {
-            actions.push({title:element.text, type:"imBack", value:element.text});
+            var t=Bot.ReplacePragmas(element.text);
+            actions.push({title:t, type:"imBack", value:t});
           });
           extension={"suggestedActions": {"actions":actions}};
           break;
         case "LUIS":
           var actions=[];
           flowItem.next.forEach(element => {
-            actions.push({title:element.text, type:"imBack", value:element.text});
+            var t=Bot.ReplacePragmas(element.text);
+            actions.push({title:t, type:"imBack", value:t});
           });
           extension={"suggestedActions": {"actions":actions}};
           break;
@@ -689,6 +704,7 @@ var Bot={
       }
 
       Bot.messageID++;
+      var t=Bot.ReplacePragmas(flowItem.text);
       activities.push(Object.assign({
         "conversation": {
           "id": "something"
@@ -704,7 +720,7 @@ var Bot={
           "name": "me",
           "role": "user"
         },
-        "text": flowItem.text,
+        "text": t,
         "timestamp": "2018-10-18T15:21:07.82108Z",
         "type": "message",
         "channelId": "web"
@@ -713,7 +729,14 @@ var Bot={
     var message={activities:activities};
   }
   DirectLineEmulator.emptyActivity=message;
-  }
+  },
+  ReplacePragmas:function(text){
+    for (var attrname in Bot.userData)
+    {
+        text=text.replace("{" + attrname + "}",Bot.userData[attrname]);
+    }
+    return text;
+}
 }
 
 function compare(a,b) {
