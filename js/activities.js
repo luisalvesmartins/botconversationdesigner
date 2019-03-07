@@ -294,13 +294,6 @@ var menu=
   }
 }
 
-function searchArray(myArray,nameKey,prop){
-  for (var i=0; i < myArray.length; i++) {
-      if (myArray[i][prop] === nameKey) {
-          return myArray[i];
-      }
-  }
-}
 
 //#region SYNC AND PLAY THE STEP THAT IS SELECTED
 function onDrawingEvent(data){
@@ -630,6 +623,44 @@ var Bot={
             Bot.userData[a.parVar]=activity.text;
           }
 
+          var topScoringIntent="None";
+          if (a.type=="LUIS"){
+            //DO THE CALL
+            var LUISResult=undefined;
+            try {
+              var url=a.parURL + a.parKey + "&q=" + activity.text;
+              var res=$.get({url:url, async:false}).responseText;
+              LUISResult=JSON.parse(res);
+            } catch (error) {
+              alert("ERROR IN LUIS PARAMETERS");
+            }
+            if (LUISResult){
+              topScoringIntent=LUISResult.topScoringIntent.intent;
+              console.log(LUISResult);console.log(topScoringIntent)
+            }
+          }
+          if (a.type=="QNA"){
+            //DO THE CALL
+            var QNAResult=undefined;
+            try {
+              var url=a.parURL + "/knowledgebases/" + a.parPar + "/generateAnswer";
+              var headers={"Authorization":"EndpointKey " + a.parKey,"Content-Type":"application/json"};
+              var res=$.post({
+                url:url, 
+                headers:headers, 
+                async:false, 
+                data:"{\"question\":\"" + encodeURI(activity.text) + "\"}"
+              }).responseText;
+              QNAResult=JSON.parse(res);
+            } catch (error) {
+              alert("ERROR IN QNA PARAMETERS");
+            }
+            if (QNAResult){
+              console.log(QNAResult);
+              topScoringIntent=QNAResult.answers[0].answer;
+            }
+          }
+
           var messages=[];
           do {
             condition=false;
@@ -640,6 +671,14 @@ var Bot={
               text=eval(text).toString();
             }
 
+            if (a.type=="LUIS")
+            {
+              text=topScoringIntent;
+            }
+            if (a.type=="QNA")
+            {
+              messages.push({type:"MESSAGE", text:topScoringIntent});
+            }            
             var nxt=Bot.getNext(a.next,text);
             if (nxt)
             {
@@ -707,6 +746,7 @@ var Bot={
             return element.to;
           }
         }
+        return undefined;
       }
   },
   sendBotMessage(flowItems){
@@ -739,12 +779,12 @@ var Bot={
           // extension={"suggestedActions": {"actions":actions}};
           break;
         case "LUIS":
-          var actions=[];
-          flowItem.next.forEach(element => {
-            var t=Bot.ReplacePragmas(element.text);
-            actions.push({title:t, type:"imBack", value:t});
-          });
-          extension={"suggestedActions": {"actions":actions}};
+          // var actions=[];
+          // flowItem.next.forEach(element => {
+          //   var t=Bot.ReplacePragmas(element.text);
+          //   actions.push({title:t, type:"imBack", value:t});
+          // });
+          // extension={"suggestedActions": {"actions":actions}};
           break;
         default:
           break;
@@ -819,4 +859,11 @@ function readTextFile(file,callback)
 function replaceAll(text, search, replacement) {
   return text.replace(new RegExp(search, 'g'), replacement);
 };
+function searchArray(myArray,nameKey,prop){
+  for (var i=0; i < myArray.length; i++) {
+      if (myArray[i][prop] === nameKey) {
+          return myArray[i];
+      }
+  }
+}
 //#endregion
