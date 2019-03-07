@@ -8,17 +8,14 @@ Create the Microsoft Bot Framework code (node or c#) automatically from the desi
 
 Play with it here: https://lambot.blob.core.windows.net/github/botconversationdesigner/index.html
 
-if you want to try some demo flows, when you press load load the url link instead of a local file: 
-
-https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.botdesign 
 
 ## Features
+- No need to deploy a bot to use the designer, run it on the browser
+- Load and Save bot flows locally
 - The conversation is synchronized with the visual designer 
 
 <img src="images/image1.png" alt="Synchronicity" width="400px"/>
 
-- No need to deploy a bot to use the designer, run it on the browser
-- Load and Save bot flows locally
 - Add nodes on the flow by drag-n-drop of elements or by typing on the conversation window: **bot:** _your text_
 - Jump to any activity and play the conversation from there
 
@@ -32,6 +29,10 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
 
 <img src="images/image4.png" alt="Export" width="400px"/>
 
+if you want to try some demo flows, when you press load load the url link instead of a local file: 
+https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.botdesign 
+
+
 ## Implementation backlog:
 - EXPORT TO Node missing features
     - API
@@ -43,3 +44,4 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
     - API
     - DIALOG
 - (new feature) Enable check if variable is already filled for any activity
+- (new feature) Enable bot syntax: **bot** _TYPE_:text like: botINPUT:What's your name? or bot:CHOICE:Pick an option
