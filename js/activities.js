@@ -22,7 +22,7 @@ var menu=
       var STRING_DECLARATION="public const string ";
       var SEND_ACTIVITY="step.Context.SendActivityAsync";
       var STEP_DECLARATION="WaterfallStepContext ";
-      var FUNCTION_DECLARATION="async Task&lt;DialogTurnResult>";
+      var FUNCTION_DECLARATION="async Task&lt;DialogTurnResult> ";
       var PROMPT_FUNCTION="PromptAsync";
       var PROMPT_CONVERSION="var promptoptions = new PromptOptions{Prompt = new Activity{Type = ActivityTypes.Message,Text = text,}};";
       var GETUSERPROFILE="var userProfile = await UserProfileAccessor.GetAsync(step.Context, () => null);\n";
@@ -31,6 +31,9 @@ var menu=
       menu.exportcore(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS);
       });
     },
+  comment:function(element){
+    return element.type + '-' + replaceAll(element.text,'\n','');
+  },
   exportcore:function(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS){
     var flow=LoadAndSave.prepareSave().flow;
     //ORDER ELEMENTS
@@ -76,7 +79,7 @@ var menu=
     var output="";
     for (let index = 0; index < flow.length; index++) {
       const element = flow[index];
-      output+=STRING_DECLARATION + 'STRING_' + element.newIndex + '="' + element.text.replace('\n','') + '";\n';
+      output+=STRING_DECLARATION + 'STRING_' + element.newIndex + '="' + replaceAll(element.text,'\n','') + '";\n';
     }
     template=template.replace("###TEXTSTRINGS###",output);
   
@@ -97,12 +100,12 @@ var menu=
 //movenext+="//" + JSON.stringify(element) + "\n";
 //movenext+=`//${JSON.stringify(element.next)}\n`;
 
-        output+=`\n          case ${element.newIndex}:\n          `;
-        movenext+=`\n            case ${element.newIndex}:\n            `;
+        output+=`\n          case ${element.newIndex}:  //${menu.comment(element)}\n`;
+        movenext+=`\n            case ${element.newIndex}:  //${menu.comment(element)}\n`;
 
         switch (element.type) {
         case "API":
-          output+=`   ${CONTEXT_NEXT}; //${element.type}-${element.text}\n`;
+          output+=`   ${CONTEXT_NEXT};\n`;
           movenext+=`userProfile.step=${n};\n            break;\n`;
           break;
         case "CARD":
@@ -131,22 +134,94 @@ var menu=
             if (op!="") op+=",";
             op+="await this.ReplacePragmas(step,\"" + elementNext.text + "\")";
           }
-          output+=`   return await this.STEP_${element.newIndex}(step); //${element.type}-${element.text}\n`;
-          functions+=`\n${FUNCTION_DECLARATION} STEP_${element.newIndex}(${STEP_DECLARATION}step) {
+          output+=`   return await this.STEP_${element.newIndex}(step);\n`;
+          functions+=`\n${FUNCTION_DECLARATION}STEP_${element.newIndex}(${STEP_DECLARATION}step) //${menu.comment(element)}
+          {
             var reply = MessageFactory.${SUGGESTEDACTIONS}([${op}], await this.ReplacePragmas(step,STRING_${element.newIndex}) );
-            return await step.${PROMPT_FUNCTION}(NAME_PROMPT,reply); //${element.type}-${element.text}
+            return await step.${PROMPT_FUNCTION}(NAME_PROMPT,reply);
           }\n`;
           movenext +=`this.addProp(userProfile,"${element.parVar}",stepResult);            ${s}\n            break;\n`;
           break;
+        case "LUIS":
+          output+=`   return await this.STEP_${element.newIndex}(step);\n`;
+          functions+=`\n${FUNCTION_DECLARATION}STEP_${element.newIndex}(${STEP_DECLARATION}step) //${menu.comment(element)}
+          {\n`;
+          if (element.parCkv=="No"){
+            functions+=`${GETUSERPROFILE}
+            var text="";
+            if (this.getProp(userProfile,"${element.parVar}")!="")
+              ${CONTEXT_NEXT}
+            else
+              text=await this.ReplacePragmas(step,STRING_${element.newIndex});`;
+          }
+          else
+            functions+=`var text=await this.ReplacePragmas(step,STRING_${element.newIndex});\n`;
+          functions+=`${PROMPT_CONVERSION}
+            return await step.${PROMPT_FUNCTION}(NAME_PROMPT, promptoptions );
+            }\n`;
+  //AQUI            
+          var s="switch(topIntent){\n";
+          for (let i = 0; i < element.next.length; i++) {
+            const elementNext = element.next[i];
+            var t=searchArray(flow,elementNext.to,"key").newIndex;
+            s+="case await this.ReplacePragmas(step,\"" + elementNext.text + "\"):\n userProfile.step=" + t + ";break;\n";
+          }
+          s+=`default: userProfile.step=${element.newIndex}};\n`;
+          movenext+=`
+            var luisRecognizer = new LuisRecognizer({
+                 applicationId: "${element.parPar}", //luisConfig.appId,
+                 endpointKey: "${element.parKey}",  //luisConfig.authoringKey, 
+                 endpoint:  "${element.parURL}"     //luisConfig.getEndpoint()
+            });
+            const results = await luisRecognizer.recognize(step.context);
+            const topIntent = LuisRecognizer.topIntent(results);
+
+            this.addProp(userProfile,"${element.parVar}",stepResult);
+            ${s}
+
+          break;\n`;
+          break;
+        case "QNA":
+          output+=`   return await this.STEP_${element.newIndex}(step);\n`;
+          functions+=`\n${FUNCTION_DECLARATION}STEP_${element.newIndex}(${STEP_DECLARATION}step) //${menu.comment(element)}
+          {\n`;
+          functions+=`var text=await this.ReplacePragmas(step,STRING_${element.newIndex});\n`;
+        functions+=`${PROMPT_CONVERSION}
+          return await step.${PROMPT_FUNCTION}(NAME_PROMPT, promptoptions );
+          }\n`;
+//AQUI            
+        movenext+=`
+        const qnaEndpointSettings = {
+          knowledgeBaseId: "${element.parPar}",
+          endpointKey: "${element.parKey}",
+          host: "${element.parURL}"
+        };
+        var qnaMaker= new QnAMaker(qnaEndpointSettings);
+        console.log(qnaMaker);
+        const qnaResults = await qnaMaker.generateAnswer(stepResult, 1, 0.1); 
+        console.log(qnaResults)
+          
+          if (qnaResults[0]) {
+            await step.context.sendActivity(qnaResults[0].answer);
+          }
+          else
+            await step.context.sendActivity("Sorry, didn't find answers in the KB.");
+
+          this.addProp(userProfile,"${element.parVar}",stepResult);
+
+          userProfile.step=${n};
+          break;\n`;
+        break;
         case "MESSAGE":
         case "START":
-            output+=`   await ${SEND_ACTIVITY}( await this.ReplacePragmas(step,STRING_${element.newIndex}) ); //${element.type}-${element.text}
+            output+=`   await ${SEND_ACTIVITY}( await this.ReplacePragmas(step,STRING_${element.newIndex}) );
               ${CONTEXT_NEXT}`;
             movenext+=`userProfile.step=${n};\n            break;\n`;
             break;
           case "INPUT":
-            output+=`   return await this.STEP_${element.newIndex}(step); //${element.type}-${element.text}\n`;
-            functions+=`\n${FUNCTION_DECLARATION} STEP_${element.newIndex}(${STEP_DECLARATION}step) {\n;`;
+            output+=`   return await this.STEP_${element.newIndex}(step);\n`;
+            functions+=`\n${FUNCTION_DECLARATION}STEP_${element.newIndex}(${STEP_DECLARATION}step) //${menu.comment(element)}
+            {\n;`;
             if (element.parCkv=="No"){
               functions+=`${GETUSERPROFILE}
               var text="";
@@ -158,7 +233,7 @@ var menu=
             else
               functions+=`var text=await this.ReplacePragmas(step,STRING_${element.newIndex});\n`;
             functions+=`${PROMPT_CONVERSION}
-              return await step.${PROMPT_FUNCTION}(NAME_PROMPT, promptoptions ); //${element.type}-${element.text}
+              return await step.${PROMPT_FUNCTION}(NAME_PROMPT, promptoptions );
               }\n`;
 //AQUI            
             movenext+=`if (stepResult!="")
@@ -176,7 +251,7 @@ var menu=
             }
             t=searchArray(flow,t,"key").newIndex;
             f=searchArray(flow,f,"key").newIndex;
-            output+=`//IF\n${CONTEXT_NEXT}`;
+            output+=`${CONTEXT_NEXT}`;
             movenext+=`var expression="${replaceAll(element.parCon,"\"","\\\"")}"; 
             expression=await this.ReplacePragmas(step, expression);
             if (this.evalCondition(expression))
@@ -186,12 +261,13 @@ var menu=
             break;\n`;
           break;
           default:
-            output+=`   return await this.STEP_${element.newIndex}(step); //${element.type}-${element.text}\n`;
+            output+=`   return await this.STEP_${element.newIndex}(step);\n`;
             //console.log("STEP_${element.newIndex}");
-            functions+=`\n${FUNCTION_DECLARATION} STEP_${element.newIndex}(${STEP_DECLARATION}step) {
+            functions+=`\n${FUNCTION_DECLARATION}STEP_${element.newIndex}(${STEP_DECLARATION}step) //${menu.comment(element)}
+            {
               var text=await this.ReplacePragmas(step,STRING_${element.newIndex});
               ${PROMPT_CONVERSION}
-              return await step.${PROMPT_FUNCTION}(NAME_PROMPT, promptoptions ); //${element.type}-${element.text}
+              return await step.${PROMPT_FUNCTION}(NAME_PROMPT, promptoptions );
             }\n`;
             movenext+=`userProfile.step=${n};
             break;\n`;
@@ -359,8 +435,8 @@ function showDataNodes(data){
 
 var ParameterList=[
     {name:"parVar", default:""}, //Variable
-    {name:"parURL", default:"https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/"},
-    {name:"parKey", default:"guid?subscription-key=code"},
+    {name:"parURL", default:"https://westus.api.cognitive.microsoft.com/"},
+    {name:"parKey", default:"authoringKey"},
     {name:"parTyp", default:""}, //Type
     {name:"parLMI", default:"0.5"}, //LUIS Minimum
     {name:"parPar", default:""}, //Parameters
@@ -395,9 +471,11 @@ var ParameterList=[
         break;
       case "LUIS":
         Fields=[{name:"parVar"},
-          {name:"parURL", default:"https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/"},
-          {name:"parKey",default:"guid?subscription-key=code"},
-          {name:"parLMI", default:"0.5"}]
+          {name:"parURL", default:"https://westus.api.cognitive.microsoft.com/"},
+          {name:"parKey", default:"authoringkey", title:'Authoring Key'},
+          {name:"parPar",default:"guid", title:'Appliaction Id'},
+          {name:"parLMI", default:"0.5"},
+          {name:"parCkv"}]
         break;
       case "MESSAGE":
         break;
@@ -628,7 +706,7 @@ var Bot={
             //DO THE CALL
             var LUISResult=undefined;
             try {
-              var url=a.parURL + a.parKey + "&q=" + activity.text;
+               var url=a.parURL + "/luis/v2.0/apps/" + a.parPar + "?subscription-key=" + a.parKey + "&q=" + activity.text;
               var res=$.get({url:url, async:false}).responseText;
               LUISResult=JSON.parse(res);
             } catch (error) {
@@ -857,6 +935,7 @@ function readTextFile(file,callback)
     rawFile.send(null);
 }
 function replaceAll(text, search, replacement) {
+  text+="";
   return text.replace(new RegExp(search, 'g'), replacement);
 };
 function searchArray(myArray,nameKey,prop){

@@ -24,7 +24,7 @@ const DIALOG_STATE_PROPERTY = 'dialogState';
 const USER_PROFILE_PROPERTY = 'userProfileProperty';
 
 // LUIS service type entry as defined in the .bot file.
-const LUIS_CONFIGURATION = 'sample-LUIS';
+const LUIS_CONFIGURATION = 'MyLuisTest';
 
 // Supported LUIS Intents.
 const GREETING_INTENT = 'Greeting';
@@ -71,6 +71,7 @@ class BasicBot {
         //     endpointKey: luisConfig.authoringKey,
         //     endpoint: luisConfig.getEndpoint()
         // });
+        // console.log(luisConfig.getEndpoint())
 
         // Create the property accessors for user and conversation state
         this.userProfileAccessor = userState.createProperty(USER_PROFILE_PROPERTY);

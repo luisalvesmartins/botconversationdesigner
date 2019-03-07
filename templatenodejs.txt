@@ -9,6 +9,7 @@
 // Import required Bot Builder
 const { ComponentDialog, WaterfallDialog, TextPrompt } = require('botbuilder-dialogs');
 const { MessageFactory, CardFactory } = require('botbuilder');
+const { LuisRecognizer, QnAMaker } = require('botbuilder-ai');
 
 // Dialog IDs
 const MAIN_DIALOG = 'mainDialog';

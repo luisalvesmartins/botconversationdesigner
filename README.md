@@ -1,6 +1,6 @@
 # bot conversation designer
 
-## NOTE: IN ACTIVE DEVELOPMENT
+## NOTE: IN ACTIVE DEVELOPMENT (Check Implementation Backlog)
 
 Design and debug visually your bot conversations.
 
@@ -19,3 +19,15 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
 - Add nodes on the flow by drag-n-drop of elements or by typing on the conversation window: **bot:** _your text_
 - Jump to any activity and play the conversation from there
 - Export the flow to C# or Node 
+
+## Implementation backlog:
+- EXPORT TO Node missing features
+    - API
+    - DIALOG
+- EXPORT TO C# missing features: 
+    - card
+    - LUIS
+    - QNA
+    - API
+    - DIALOG
+- (new feature) Enable check if variable is already filled for any activity
