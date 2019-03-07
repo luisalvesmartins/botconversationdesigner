@@ -12,6 +12,8 @@ function goDiagram(){
                   $(go.Shape, "LineV", { stroke: "gray", strokeWidth: 0.5, interval: 10 })
                 ),
           allowDrop: true,  // must be true to accept drops from the Palette
+          allowZoom: true,
+          "toolManager.mouseWheelBehavior": go.ToolManager.WheelZoom,
           "draggingTool.dragsLink": true,
           "draggingTool.isGridSnapEnabled": true,
           "linkingTool.isUnconnectedLinkValid": false,

@@ -15,26 +15,26 @@
 </head>
 <body onload="init()">
     <div id="header"><b>bot</b>conversation<b>designer</b></div>
-    <div id="main">
+    <style>button {border: 1px solid gray;padding:5px;cursor: pointer;}</style>
+    <div style="position:absolute;top:24px;left:350px">
+        <button onclick="menu.new()">New</button>
+        <button onclick="menu.save()">Save</button>
+        <button onclick="menu.load()">Load</button><input type="file" id="fileToLoad" style="display:none">
+        <button onclick="menu.PlayStep()">Play From Step</button>
+        <button onclick="menu.exportCsharp()" style="margin-left: 20px;">Export to C#</button>
+        <button onclick="menu.exportNodejs()">Export to Node</button>
+    </div>
+<div id="main">
         <div id="left" class="panel">
             <div id="botWC" class=largeChild></div>
         </div>
         <div id="center" class="panel">
             <div class=largeChild style="position:relative">
-            <div class=wc-header><span style="font-size:15px">Designer</span></div>
-            <div style="position:absolute;top:40px">      
-                <button onclick="menu.new()">New</button>
-                <button onclick="menu.save()">Save</button>
-                <button onclick="menu.load()">Load</button><input type="file" id="fileToLoad" style="display:none">
-                <button onclick="menu.PlayStep()">Play From Step</button>
-                <button onclick="menu.exportCsharp()" style="margin-left: 20px;">Export to C#</button>
-                <button onclick="menu.exportNodejs()">Export to Node</button>
-            </div>
-            <div class="godiag">
-                <div id="myPaletteDiv"></div>
-                <div id="myDiagramDiv"></div>
-            </div>
-            
+                <div class=wc-header><span style="font-size:15px">Designer</span></div>
+                <div id="godiag">
+                    <div id="myPaletteDiv"></div>
+                    <div id="myDiagramDiv"></div>
+                </div>
             </div>
         </div>
         <div id="right" class="panel">
