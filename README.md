@@ -13,12 +13,17 @@ if you want to try some demo flows, when you press load load the url link instea
 https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.botdesign 
 
 ## Features
-- The conversation is synchronized with the visual designer
-- No need to deploy a bot to use the designer
+- The conversation is synchronized with the visual designer 
+![Synchronicity](images/image1.png =300x)
+- No need to deploy a bot to use the designer, run it on the browser
 - Load and Save bot flows locally
 - Add nodes on the flow by drag-n-drop of elements or by typing on the conversation window: **bot:** _your text_
 - Jump to any activity and play the conversation from there
+![Debug](images/image2.png =300x)
+- Use pragmas {_var_} to do IF or show user input 
+![Debug](images/image3.png =300x)
 - Export the flow to C# or Node 
+![Export](images/image4.png =300x)
 
 ## Implementation backlog:
 - EXPORT TO Node missing features
