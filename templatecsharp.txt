@@ -3,7 +3,7 @@
 
 // DEPLOYMENT INSTRUCTIONS:
 // 1. GET FULL NODE PROJECT FROM: https://github.com/luisalvesmartins/botconversationdesigner/tree/master/botcode/csharp
-// 2. REPLACE THE FILE DIALOGS/MAIN.JS WITH THIS CONTENT 
+// 2. REPLACE THE FILE DIALOGS/MAIN.CS WITH THIS CONTENT 
 // 3. RUN THE BOT
 
 using System;
@@ -15,6 +15,9 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Extensions.Logging;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Microsoft.Bot.Builder.AI.Luis;
+using Microsoft.Bot.Builder.AI.QnA;
+using Microsoft.Bot.Configuration;
 
 namespace sample
 {
@@ -84,6 +87,8 @@ namespace sample
         {
             var userProfile = await UserProfileAccessor.GetAsync(step.Context, () => null);
             var stepResult = (string)step.Result;
+            string expression="";
+
 
             switch (userProfile.step) {
 ///MOVENEXT
@@ -142,6 +147,17 @@ namespace sample
                 Res = false;
             }
             return Res;
+        }
+        LuisRecognizer LuisRec(string applicationId,string endpointKey,string endpoint){
+            LuisApplication LA = new LuisApplication(applicationId, endpointKey, endpoint);
+            return new LuisRecognizer(LA);
+        }
+        QnAMaker QnA(string EndpointKey, string KbId, string Hostname){
+            QnAMakerService Q = new QnAMakerService();
+            Q.EndpointKey = EndpointKey;
+            Q.KbId = KbId;
+            Q.Hostname = Hostname;
+            return new QnAMaker(Q);
         }
 
     }

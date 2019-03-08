@@ -70,10 +70,10 @@ async MAINSTEP(step){
     }
 
     async LOOP(step){
-        console.log("LOOP");
         let userProfile = await this.userProfileAccessor.get(step.context);
         var stepResult = step.result;
         userProfile.result=step.result;
+        var expression="";
 
         switch (userProfile.step) {
 ///MOVENEXT
@@ -90,6 +90,7 @@ async MAINSTEP(step){
 ///FUNCTIONS
 ###FUNCTIONS###    
 
+//ABSTRACTIONS FOR NODE AND C#
     async ReplacePragmas(step,text){
         let userProfile = await this.userProfileAccessor.get(step.context);
         for (var attrname in userProfile)
@@ -112,6 +113,21 @@ async MAINSTEP(step){
     evalCondition(expression)
     {
         return eval(expression);
+    }
+    LuisRec(applicationId, endpointKey, endpoint){
+        return new LuisRecognizer({
+                 applicationId: applicationId,
+                 endpointKey: endpointKey,
+                 endpoint:  endpoint
+            });
+    }
+    QnA(EndpointKey, KbId, Hostname){
+        var qnaEndpointSettings = {
+            knowledgeBaseId: KbId,
+            endpointKey: EndpointKey,
+            host: Hostname
+        };
+        return new QnAMaker(qnaEndpointSettings);
     }
 
 }

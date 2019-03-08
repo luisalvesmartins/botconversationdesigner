@@ -39,8 +39,6 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
     - DIALOG
 - EXPORT TO C# missing features: 
     - card
-    - LUIS
-    - QNA
     - API
     - DIALOG
 - (new feature) Enable check if variable is already filled for any activity

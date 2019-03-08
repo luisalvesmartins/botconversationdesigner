@@ -11,8 +11,10 @@ var menu=
       var PROMPT_CONVERSION="var promptoptions=text;";
       var GETUSERPROFILE="let userProfile = await this.userProfileAccessor.get(step.context);\n";
       var SUGGESTEDACTIONS="suggestedActions";
+      var LUIS_RECOGNIZE="var results = await luisRecognizer.recognize(step.context);var topIntent = LuisRecognizer.topIntent(results);";
+      var QNA_RESULTS="var qnaResults = await qnaMaker.generateAnswer(stepResult, 1, 0.1); if (qnaResults[0]) {var res=qnaResults[0].answer;";
 
-      menu.exportcore(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS);
+      menu.exportcore(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS,LUIS_RECOGNIZE,QNA_RESULTS);
 
     });
   },
@@ -27,14 +29,16 @@ var menu=
       var PROMPT_CONVERSION="var promptoptions = new PromptOptions{Prompt = new Activity{Type = ActivityTypes.Message,Text = text,}};";
       var GETUSERPROFILE="var userProfile = await UserProfileAccessor.GetAsync(step.Context, () => null);\n";
       var SUGGESTEDACTIONS="SuggestedActions";
+      var LUIS_RECOGNIZE="var results = await luisRecognizer.RecognizeAsync(step.Context,new CancellationToken());var topIntent = LuisRecognizer.TopIntent(results);";
+      var QNA_RESULTS="var qnaResults = await qnaMaker.GetAnswersAsync(step.Context); if (qnaResults.Length>0) {var res=qnaResults[0].Answer;";
 
-      menu.exportcore(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS);
+      menu.exportcore(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS,LUIS_RECOGNIZE,QNA_RESULTS);
       });
     },
   comment:function(element){
     return element.type + '-' + replaceAll(element.text,'\n','');
   },
-  exportcore:function(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS){
+  exportcore:function(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS,LUIS_RECOGNIZE,QNA_RESULTS){
     var flow=LoadAndSave.prepareSave().flow;
     //ORDER ELEMENTS
     var startElement=searchArray(flow,"START","type");
@@ -159,26 +163,16 @@ var menu=
           functions+=`${PROMPT_CONVERSION}
             return await step.${PROMPT_FUNCTION}(NAME_PROMPT, promptoptions );
             }\n`;
-  //AQUI            
-          var s="switch(topIntent){\n";
+          var s=`userProfile.step=${element.newIndex};\n`;
           for (let i = 0; i < element.next.length; i++) {
             const elementNext = element.next[i];
             var t=searchArray(flow,elementNext.to,"key").newIndex;
-            s+="case await this.ReplacePragmas(step,\"" + elementNext.text + "\"):\n userProfile.step=" + t + ";break;\n";
+            s+="if (topIntent==await this.ReplacePragmas(step,\"" + elementNext.text + "\")) userProfile.step=" + t + ";\n";
           }
-          s+=`default: userProfile.step=${element.newIndex}};\n`;
-          movenext+=`
-            var luisRecognizer = new LuisRecognizer({
-                 applicationId: "${element.parPar}", //luisConfig.appId,
-                 endpointKey: "${element.parKey}",  //luisConfig.authoringKey, 
-                 endpoint:  "${element.parURL}"     //luisConfig.getEndpoint()
-            });
-            const results = await luisRecognizer.recognize(step.context);
-            const topIntent = LuisRecognizer.topIntent(results);
-
+          movenext+=`var luisRecognizer=LuisRec("${element.parPar}","${element.parKey}","${element.parURL}");
+            ${LUIS_RECOGNIZE}
             this.addProp(userProfile,"${element.parVar}",stepResult);
             ${s}
-
           break;\n`;
           break;
         case "QNA":
@@ -189,23 +183,12 @@ var menu=
         functions+=`${PROMPT_CONVERSION}
           return await step.${PROMPT_FUNCTION}(NAME_PROMPT, promptoptions );
           }\n`;
-//AQUI            
-        movenext+=`
-        const qnaEndpointSettings = {
-          knowledgeBaseId: "${element.parPar}",
-          endpointKey: "${element.parKey}",
-          host: "${element.parURL}"
-        };
-        var qnaMaker= new QnAMaker(qnaEndpointSettings);
-        console.log(qnaMaker);
-        const qnaResults = await qnaMaker.generateAnswer(stepResult, 1, 0.1); 
-        console.log(qnaResults)
-          
-          if (qnaResults[0]) {
-            await step.context.sendActivity(qnaResults[0].answer);
+        movenext+=`var qnaMaker=QnA("${element.parKey}", "${element.parPar}", "${element.parURL}");
+        ${QNA_RESULTS}
+            await ${SEND_ACTIVITY}(res);
           }
           else
-            await step.context.sendActivity("Sorry, didn't find answers in the KB.");
+            await ${SEND_ACTIVITY}("Sorry, didn't find answers in the KB.");
 
           this.addProp(userProfile,"${element.parVar}",stepResult);
 
@@ -252,8 +235,7 @@ var menu=
             t=searchArray(flow,t,"key").newIndex;
             f=searchArray(flow,f,"key").newIndex;
             output+=`${CONTEXT_NEXT}`;
-            movenext+=`var expression="${replaceAll(element.parCon,"\"","\\\"")}"; 
-            expression=await this.ReplacePragmas(step, expression);
+            movenext+=`expression=await this.ReplacePragmas(step, "${replaceAll(element.parCon,"\"","\\\"")}");
             if (this.evalCondition(expression))
               userProfile.step=${t};
             else
