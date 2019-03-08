@@ -3,6 +3,7 @@
 
 // DEPLOYMENT INSTRUCTIONS:
 // 1. GET FULL NODE PROJECT FROM: https://github.com/luisalvesmartins/botconversationdesigner/tree/master/botcode/nodejs
+//    OR FROM HERE: https://lambot.blob.core.windows.net/github/botconversationdesigner/samplenodejs.zip
 // 2. REPLACE THE FILE DIALOGS/MAIN.JS WITH THIS CONTENT 
 // 3. RUN THE BOT
 
