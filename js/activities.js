@@ -470,6 +470,10 @@ var ParameterList=[
           {name:"parPar", title:"Knowledgebase",default:"guid"},
         ]
         break;
+      case "RESETVAR":
+        Fields=[{name:"parVar", title:"List of variables to erase separated by comma"},
+        ]
+        break;
       case "START":
         break;
     default:
@@ -771,14 +775,23 @@ var Bot={
                 condition=false;
                 bSendMessage=false;
               }
+              if (goto.type=="RESETVAR")
+              {
+                var a=goto.parVar.split(",");
+                for (let index = 0; index < a.length; index++) {
+                  const element = a[index];
+                  delete Bot.userData[element];
+                }
+                bSendMessage=false;
+              }
               if (bSendMessage){
                 messages.push(goto);
               }
-              
+                
               myDiagram.select(myDiagram.findNodeForKey(nxt));
 
               var a=searchArray(flow,nxt,"key")
-              if (a.type=="MESSAGE" || a.type=="START" || a.type=="API" || a.type=="IF")
+              if (a.type=="MESSAGE" || a.type=="START" || a.type=="API" || a.type=="IF" || a.type=="RESETVAR")
                 condition=true;
             }
             else

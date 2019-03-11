@@ -150,16 +150,16 @@ function goDiagram(){
         },
         $(go.Panel, "Auto",
           new go.Binding("visible", "isNotSelected").ofObject(),
-          $(go.Shape, "RoundedRectangle",  // the link shape
-            { fill: "#F8F8F8", stroke: null }),
+          $(go.Shape, "Rectangle",  // the link shape
+            { fill: "#aaaaaa", stroke: null }),
           $(go.TextBlock,
             {
               textAlign: "start",
-              font: "9pt helvetica, arial, sans-serif",
-              stroke: "black",
-              margin: 2,
+              font: "bold 9pt helvetica, arial, sans-serif",
+              stroke: "white",
+              margin: 3,
               minSize: new go.Size(10, NaN),
-              editable: true
+              editable: true,
             },
             new go.Binding("text").makeTwoWay())
         )
@@ -228,7 +228,8 @@ function goDiagram(){
             { text: "QNA", figure: "RoundedRectangle", fill: "#77CC77", type:"QNA" },
             { text: "API", figure: "RoundedRectangle", fill: "#FF7777", type:"API" },
             { text: "Card", type:"CARD",fill: "lightyellow" },
-            { text: "Dialog", type:"DIALOG", figure: "RoundedRectangle", fill: "#FFdddd" }
+            { text: "Dialog", type:"DIALOG", figure: "RoundedRectangle", fill: "#FFdddd" },
+            { text: "Reset Var", type:"RESETVAR", figure: "RoundedRectangle", fill: "#FF3333" }
           ]//, [
             // the Palette also has a disconnected Link, which the user can drag-and-drop
             //{ points: new go.List(go.Point).addAll([new go.Point(0, 0), new go.Point(30, 0), new go.Point(30, 40), new go.Point(60, 40)]) }
