@@ -229,10 +229,11 @@ function goDiagram(){
             { text: "API", figure: "RoundedRectangle", fill: "#FF7777", type:"API" },
             { text: "Card", type:"CARD",fill: "lightyellow" },
             { text: "Dialog", type:"DIALOG", figure: "RoundedRectangle", fill: "#FFdddd" }
-          ], [
+          ]//, [
             // the Palette also has a disconnected Link, which the user can drag-and-drop
-            { points: new go.List(go.Point).addAll([new go.Point(0, 0), new go.Point(30, 0), new go.Point(30, 40), new go.Point(60, 40)]) }
-          ])
+            //{ points: new go.List(go.Point).addAll([new go.Point(0, 0), new go.Point(30, 0), new go.Point(30, 40), new go.Point(60, 40)]) }
+          //]
+          )
         });
   
           // Define a function for creating a "port" that is normally transparent.

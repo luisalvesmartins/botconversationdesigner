@@ -6,6 +6,9 @@
 //    OR FROM HERE: https://lambot.blob.core.windows.net/github/botconversationdesigner/samplenodejs.zip
 // 2. REPLACE THE FILE DIALOGS/MAIN.JS WITH THIS CONTENT 
 // 3. RUN THE BOT
+//
+// MISSING FEATURES:
+// TYPE: API,DIALOG
 
 // Import required Bot Builder
 const { ComponentDialog, WaterfallDialog, TextPrompt } = require('botbuilder-dialogs');

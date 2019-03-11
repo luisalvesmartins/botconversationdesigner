@@ -53,7 +53,10 @@
     flex: 0 0 300px;
     -webkit-flex: 0 0 300px;
   }
-
+  #left2.panel {
+    flex: 0 0 400px;
+    -webkit-flex: 0 0 400px;
+  }
   .largeChild {
     margin: 5px;
     padding: 0px;

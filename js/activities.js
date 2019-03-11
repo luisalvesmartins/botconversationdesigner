@@ -47,17 +47,17 @@ var menu=
     var index=1;
     var goto=startElement;
     do{
-      console.log(goto)
-      console.log(goto.next)
+      // console.log(goto)
+      // console.log(goto.next)
       var next=Bot.getNext(goto.next,"");
       if (!next){
         if (goto.next.length>0)
           next=goto.next[0].to;
       }
-      console.log(next)
+      //console.log(next)
       if (next){
         var goto=searchArray(flow,next,"key")
-        console.log("GOTO:" + goto.key)
+        //console.log("GOTO:" + goto.key)
         if (goto.newIndex)
           next=null;
         else{
@@ -146,6 +146,8 @@ var menu=
           }\n`;
           movenext +=`this.addProp(userProfile,"${element.parVar}",stepResult);            ${s}\n            break;\n`;
           break;
+        case "DIALOG":
+          output+=`   return await step.replaceDialog("${element.parPar}");`;
         case "LUIS":
           output+=`   return await this.STEP_${element.newIndex}(step);\n`;
           functions+=`\n${FUNCTION_DECLARATION}STEP_${element.newIndex}(${STEP_DECLARATION}step) //${menu.comment(element)}
@@ -387,7 +389,7 @@ function showDataNodes(data){
   }
   myDiagram.commitTransaction("make new node");
 }
-//endregion
+//#endregion
 
 //#region PARAMETERS
   function parSave(){
@@ -696,7 +698,14 @@ var Bot={
             }
             if (LUISResult){
               topScoringIntent=LUISResult.topScoringIntent.intent;
-              console.log(LUISResult);console.log(topScoringIntent)
+              if (LUISResult.sentimentAnalysis){
+                Bot.userData[a.parVar + ".sentiment.label"]=LUISResult.sentimentAnalysis.label;
+                Bot.userData[a.parVar + ".sentiment.score"]=LUISResult.sentimentAnalysis.score;
+              }
+              LUISResult.entities.forEach(element => {
+                Bot.userData[a.parVar + "." + element.type]=element.entity;
+              });
+              //console.log(topScoringIntent);
             }
           }
           if (a.type=="QNA"){
@@ -730,7 +739,7 @@ var Bot={
               text=Bot.ReplacePragmas(a.parCon)
               text=eval(text).toString();
             }
-
+            //console.log("A.TYPE:" + a.type);
             if (a.type=="LUIS")
             {
               text=topScoringIntent;
@@ -738,7 +747,7 @@ var Bot={
             if (a.type=="QNA")
             {
               messages.push({type:"MESSAGE", text:topScoringIntent});
-            }            
+            }
             var nxt=Bot.getNext(a.next,text);
             if (nxt)
             {
@@ -748,19 +757,22 @@ var Bot={
                 bSendMessage=false;
               }
               if (goto.type=="INPUT"){
-                console.log("INPUT")
-                console.log(goto.type)
+                // console.log("INPUT")
+                // console.log(goto.type)
                 if (goto.parCkv=="No" && Bot.userData[goto.parVar]){
-                  console.log("DO NOT SHOW")
+                  // console.log("DO NOT SHOW")
                   bSendMessage=false;
                   condition=true;
                 }
               }
-              if (bSendMessage){
-                console.log("SHOW")
-                console.log(goto)
+              if (goto.type=="DIALOG"){
+                goto.text="Transfer to Dialog " + goto.parAPI;
                 messages.push(goto);
-
+                condition=false;
+                bSendMessage=false;
+              }
+              if (bSendMessage){
+                messages.push(goto);
               }
               
               myDiagram.select(myDiagram.findNodeForKey(nxt));
@@ -775,6 +787,8 @@ var Bot={
             }
           } while (condition);
           $("#userdatavalue").html(JSON.stringify(Bot.userData));
+          // console.log("MESSAGES")
+          // console.log(messages)
           Bot.sendBotMessage(messages);
         }
         else
@@ -820,7 +834,7 @@ var Bot={
       switch (flowItem.type) {
         case "CARD":
           extension={"attachments": [JSON.parse(flowItem.parCrd)]};
-          console.log(extension);
+          //console.log(extension);
           break;
         case "CHOICE":
           var actions=[];
