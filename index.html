@@ -1,19 +1,16 @@
 <!DOCTYPE HTML>
-<html>
+<html lang="en-US">
 <head>
     <title>Bot Conversation Designer</title>
     <meta charset="UTF-8"/>
-<style>
-</style>
     <link href="css/style.css" rel="stylesheet" />
-    <link href="https://cdn.botframework.com/botframework-webchat/latest/botchat.css" rel="stylesheet" />
     <script src="js/go.js"></script>
     <script src="js/diagram.js"></script>
     <script src="js/activities.js"></script>
+    <script src="js/jquery-3.1.1.min.js"></script>
     <script src="js/offlinebotchat.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
-<body onload="init()">
+<body>
     <div id="header"><b>bot</b>conversation<b>designer</b></div>
     <style>button {border: 1px solid gray;padding:5px;cursor: pointer;}</style>
     <div style="position:absolute;top:24px;left:350px">
@@ -23,10 +20,14 @@
         <button onclick="menu.PlayStep()">Play From Step</button>
         <button onclick="menu.exportCsharp()" style="margin-left: 20px;">Export to C#</button>
         <button onclick="menu.exportNodejs()">Export to Node</button>
+        <div style="display:none"><input type="checkbox" id="cookiePreserve" onclick="menu.preserve()">Preserve config in cookie </div>
     </div>
 <div id="main">
         <div id="left" class="panel">
-            <div id="botWC" class=largeChild></div>
+            <div class=largeChild style="position:relative">
+                <div class=wc-header><span style="font-size:15px">Chat</span></div>
+                <div id="botWC" style="padding-top:50px"></div>
+            </div>
         </div>
         <div id="center" class="panel">
             <div class=largeChild style="position:relative">
@@ -40,7 +41,7 @@
         <div id="right" class="panel">
             <div class=largeChild style="position:relative">
                 <div class=wc-header><span style="font-size:15px">Properties</span></div>
-                <div style="padding-top:60px;" id=propList></div>
+                <div style="padding-top:50px;" id=propList></div>
         
                 <textarea id="mySavedModel" style="display:none;width:100%;height:300px">{ "class": "go.GraphLinksModel","linkFromPortIdProperty": "fromPort","linkToPortIdProperty": "toPort","nodeDataArray": [],"linkDataArray": []}    </textarea>
         
@@ -57,25 +58,34 @@
     <div id="footer">2019 Luis Alves Martins - <a href="http://github.com/luisalvesmartins">http://github.com/luisalvesmartins</a></div>
 
     <script>
+        
 var DirectLineEmulator;        
-function init()
+window.onload=function()
 {
-      const user = {
+    const user = {
         id: 'Luis',
         name: 'Luis'
-      };
-      const bot = {
+    };
+    const bot = {
         id: 'botid',
         name: 'botname'
-      };
+    };
+    const styleOptions = {
+        bubbleBackground: 'rgba(0, 0, 255, .1)',
+        bubbleFromUserBackground: 'rgba(0, 255, 0, .1)',
+        botAvatarInitials: 'Bot',
+        userAvatarInitials: 'User',
+    };
 
-      BotChat.App({
-        bot: bot,
-        user: user,
-        botConnection: new BotChat.DirectLine({}),
-        //to disable user shell
-        //disabled:true
-      }, document.getElementById('botWC'));
+      window.WebChat.renderWebChat({
+          directLine: window.WebChat.createDirectLine({token:'ZZBLtyMB_b4.rhMalTCG0teiYNBK4FyVl2finGci2iYLHtBDo7SknMQ' }),
+          bot: bot,
+          user: user,
+            styleOptions
+        }, document.getElementById('botWC'));
+
+        document.querySelector('#botWC > *').focus();
+  
 
     DirectLineEmulator={
       emptyActivity:{
@@ -83,12 +93,13 @@ function init()
           "watermark": "0"
       },
       userActivity:function(activity){
-      //Every time the user sends an activity: 
+      //Every time the user sends an activity:
+      console.log(activity) 
           Bot.receiveMessage(activity);
       },
       getActivity:function(activity){
       //The bot polls this function every 1000ms, change activity to the message you want to display
-          //console.log("ACTIVITY SENT")
+          console.log("ACTIVITY SENT")
           return this.emptyActivity;
       }
     }
@@ -102,7 +113,6 @@ function init()
     Bot.userData={};
     myDiagram.select(myDiagram.findNodeForKey("1"));
     menu.PlayStep();
-
 }        
 </script>
 <!-- Global site tag (gtag.js) - Google Analytics -->

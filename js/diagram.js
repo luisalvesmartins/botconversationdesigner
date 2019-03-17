@@ -42,6 +42,13 @@ function goDiagram(){
       } else {
         if (idx >= 0) document.title = document.title.substr(0, idx);
       }
+      if (document.all("cookiePreserve").checked)
+      {
+        if (typeof(Storage) !== "undefined") {
+          // Code for localStorage/sessionStorage.
+          localStorage.setItem("flow", JSON.stringify(LoadAndSave.prepareSave()));
+        }
+      }
     });
 
 	myDiagram.addDiagramListener("ChangedSelection", function(diagramEvent) {

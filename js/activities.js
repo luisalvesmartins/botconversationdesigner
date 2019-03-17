@@ -1,5 +1,12 @@
 var menu=
 {
+  preserve:function(){
+    if (typeof(Storage) !== "undefined") {
+      localStorage.load=document.all("cookiePreserve").checked;
+      } else {
+       alert("Sorry! No Web Storage support..");
+    }
+  },
   exportNodejs:function(){
     readTextFilePromise("templatenodejs.txt").then(function(template){
       var CONTEXT_NEXT = "return await step.next();\n";
@@ -846,8 +853,21 @@ var Bot={
       var extension;
       switch (flowItem.type) {
         case "CARD":
-          extension={"attachments": [JSON.parse(flowItem.parCrd)]};
-          //console.log(extension);
+          switch (flowItem.parCar) {
+          case "adaptiveCard":
+            var cardText=Bot.ReplacePragmas(flowItem.parCrd);
+
+            extension={"attachments": [
+              {"contentType": "application/vnd.microsoft.card.adaptive",
+              "content":  JSON.parse(cardText)}
+            ]};
+            flowItem.text="";
+            break;
+          default:
+            extension={"attachments": [JSON.parse(flowItem.parCrd)]};
+            break;
+          }        
+          console.log(extension);
           break;
         case "CHOICE":
           var actions=[];
@@ -895,11 +915,12 @@ var Bot={
           "role": "user"
         },
         "text": t,
-        "timestamp": "2018-10-18T15:21:07.82108Z",
+        "timestamp": (new Date).toISOString(),
         "type": "message",
-        "channelId": "web"
+        "channelId": "web",
       },extension));
     //Bot.sendMessage(flowItem.text, extension);
+    //console.log(activities);
     var message={activities:activities};
   }
   DirectLineEmulator.emptyActivity=message;
