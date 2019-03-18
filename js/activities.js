@@ -2,8 +2,10 @@ var menu=
 {
   preserve:function(){
     if (typeof(Storage) !== "undefined") {
-      localStorage.load=document.all("cookiePreserve").checked;
-      } else {
+        localStorage.setItem("cookiePreserve",document.all("cookiePreserve").checked);
+        if (document.all("cookiePreserve").checked)
+          localStorage.setItem("flow", JSON.stringify(LoadAndSave.prepareSave()));
+    } else {
        alert("Sorry! No Web Storage support..");
     }
   },
@@ -366,7 +368,6 @@ var menu=
 function onDrawingEvent(data){
   myDiagram.select(myDiagram.findPartForKey(Number(data)));
 }
-
 //#endregion
 
 
@@ -399,30 +400,133 @@ function showDataNodes(data){
 //#endregion
 
 //#region PARAMETERS
-  function parSave(){
-    var node = myDiagram.selection.first();
-    if (node){
-      var data = node.data;
-      for(var f=0;f<ParameterList.length;f++){
-        var name=ParameterList[f].name;
-        if (document.all(name))
-        {
-            //console.log(name + "->" + document.all(name).type)
-            data[name]=document.all(name).value;
-        }
-          
+var Card={
+  getImages:function(){
+    return [];
+  },
+  getButtons:function(){
+    return [{ type: ActionTypes.PostBack, title: "button", value: "buttonvalue"}];
+  }
+}
+
+function cardTemplate(){
+  //parCar, parCrd
+  var parCar=document.all("parCar").value;
+var title="title";
+var text="text";
+var conn="";
+var url="";
+  
+  switch (parCar) {
+  case "adaptiveCard":
+  var c={
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+       "type": "AdaptiveCard",
+       "version": "1.0",
+       "body": [
+           {
+              "type": "TextBlock",
+              "text": "Default text input"
+           }
+       ],
+       "actions": [
+           {
+              "type": "Action.Submit",
+              "title": "OK"
+           }
+       ]
+     }
+    attachments=c;
+  //card
+    break;
+  case "animationCard": //title, media, buttons, other
+    attachments=CardFactory.animationCard(
+      title,
+      [""], 
+      Card.getButtons("divButtons"));
+    break;
+  case "audioCard": //title, media, buttons, other
+    attachments=CardFactory.audioCard(
+      title,
+      [""], 
+      Card.getButtons("divButtons"));
+    break;
+  case "heroCard": //title, media, buttons, other
+    attachments=CardFactory.heroCard(
+      title,
+      text, 
+      Card.getImages("divImg"), 
+      Card.getButtons("divButtons"));
+  break;
+  case "receiptCard": //card
+    attachments=CardFactory.receiptCard(title);
+    break;
+  case "oauthCard": //connectionName, title, text
+      attachments=CardFactory.oauthCard(
+        conn,
+        title,
+        text);
+    break;
+  case "signinCard": //title, url, text
+      attachments=CardFactory.signinCard(
+        title,
+        url,
+        text);
+    break;
+  case "thumbnailCard": //title, text, images, buttons
+      attachments=CardFactory.thumbnailCard(
+        title,
+        text, 
+        Card.getImages("divImg"), 
+        Card.getButtons("divButtons"));
+    break;
+  case "videoCard": //title, media, buttons
+      var title=$("#divTitle").text();
+      attachments=CardFactory.videoCard(
+        title,
+        [""], 
+        Card.getButtons("divButtons"));
+    break;
+  default:
+    break;
+  }
+  document.all("parCrd").value=JSON.stringify(attachments);
+  console.log("ATT:" + parCar)
+  console.log(JSON.stringify(attachments))
+  //document.all("parCrd").innerText=JSON.stringify(attachments);
+}
+
+function parSave(){
+  var node = myDiagram.selection.first();
+  if (node){
+    var data = node.data;
+    for(var f=0;f<ParameterList.length;f++){
+      var name=ParameterList[f].name;
+      if (document.all(name))
+      {
+          //console.log(name + "->" + document.all(name).type)
+          data[name]=document.all(name).value;
+      }
+        
+    }
+    if (document.all("cookiePreserve").checked)
+    {
+      if (typeof(Storage) !== "undefined") {
+        // Code for localStorage/sessionStorage.
+        localStorage.setItem("flow", JSON.stringify(LoadAndSave.prepareSave()));
       }
     }
   }
-  function parLoad(data){
-    for(var f=0;f<ParameterList.length;f++){
-        var name=ParameterList[f].name;
-        if (data[name]){
-          if (document.all(name))
-            document.all(name).value=data[name];
-        }
+}
+function parLoad(data){
+  for(var f=0;f<ParameterList.length;f++){
+      var name=ParameterList[f].name;
+      if (data[name]){
+        if (document.all(name))
+          document.all(name).value=data[name];
       }
-  }
+    }
+}
 
 var ParameterList=[
     {name:"parVar", default:""}, //Variable
@@ -491,13 +595,13 @@ var ParameterList=[
   function DisplayProperties(data){
       //BUILD FIELDS ACCORDING TO TYPE
       var Fields=GetFieldList(data.type);
-      var sHTML="<div>KEY</div>" + data.key + "<div>TEXT</div>" + data.text + "<div>TYPE</div>" + data.type;
+      var sHTML="<div>KEY & TYPE</div>" + data.key + "(" + data.type + ")<div>TEXT</div>" + data.text ;
       for(var f=0;f<Fields.length;f++){
         var field=Fields[f];
         sHTML+="<div id=t_" + field.name + ">";
         switch (field.name) {
           case "parCrd":
-            sHTML+="Card Definition</div><TEXTAREA id=parCrd onkeyup='parSave()' rows=12 cols=21 style='width:180px'></TEXTAREA>"
+            sHTML+="Card Definition</div><TEXTAREA id=parCrd onkeyup='parSave()' rows=14 cols=21 style='width:180px'></TEXTAREA>"
             break;
           case "parVar":
             sHTML+="VARIABLE</div><INPUT type=text id=parVar onkeyup='parSave()' style='width:180px'>"
@@ -527,7 +631,7 @@ var ParameterList=[
             "</select>";
             break;
           case "parCar":
-            sHTML+="Card</div><SELECT id=parCar onkeyup='parSave()' onchange='parSave()'>" +
+            sHTML+="Card</div><SELECT id=parCar onkeyup='parSave()' onchange='cardTemplate();parSave()'>" +
             "<option>adaptiveCard</option>" + 
             "<option>animationCard</option>" + 
             "<option>audioCard</option>" + 
