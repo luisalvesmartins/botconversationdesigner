@@ -11,7 +11,7 @@
 // TYPE: API,DIALOG
 
 // Import required Bot Builder
-const { ComponentDialog, WaterfallDialog, TextPrompt } = require('botbuilder-dialogs');
+const { ComponentDialog, WaterfallDialog, TextPrompt, ChoicePrompt } = require('botbuilder-dialogs');
 const { MessageFactory, CardFactory } = require('botbuilder');
 const { LuisRecognizer, QnAMaker } = require('botbuilder-ai');
 
@@ -20,6 +20,7 @@ const MAIN_DIALOG = 'mainDialog';
 
 // Prompt IDs
 const NAME_PROMPT = 'namePrompt';
+const CHOICE_PROMPT = 'choicePrompt';
 
 // TEXT STRINGS
 ###TEXTSTRINGS###
@@ -46,6 +47,7 @@ class Main extends ComponentDialog {
 
         // Add text prompts for name and city
         this.addDialog(new TextPrompt(NAME_PROMPT));
+        this.addDialog(new ChoicePrompt(CHOICE_PROMPT));
 
         // Save off our state accessor for later use
         this.userProfileAccessor = userProfileAccessor;
@@ -133,7 +135,10 @@ async MAINSTEP(step){
         };
         return new QnAMaker(qnaEndpointSettings);
     }
-
+    suggestActionsOptions(prompt,choices)
+    {
+        return MessageFactory.suggestedActions(choices,prompt);
+    }
 }
 
 exports.MainDialog = Main;

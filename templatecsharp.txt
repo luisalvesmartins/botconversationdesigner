@@ -22,6 +22,7 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Builder.AI.QnA;
 using Microsoft.Bot.Configuration;
+using Microsoft.Bot.Builder.Dialogs.Choices;
 
 namespace sample
 {
@@ -36,6 +37,7 @@ namespace sample
     {
         public string MAIN_DIALOG = "mainDialog";
         public string NAME_PROMPT = "namePrompt";
+        public string CHOICE_PROMPT = "choicePrompt";
 
 // TEXT STRINGS
 ###TEXTSTRINGS###
@@ -61,6 +63,7 @@ namespace sample
                                                     }
                     ));
             AddDialog(new TextPrompt(NAME_PROMPT));
+            AddDialog(new ChoicePrompt(CHOICE_PROMPT) { Style=ListStyle.SuggestedAction });
         }
 
         public IStatePropertyAccessor&lt;userState> UserProfileAccessor { get; }
@@ -90,7 +93,7 @@ namespace sample
         private async Task&lt;DialogTurnResult> LOOP(WaterfallStepContext step,CancellationToken cancellationToken)
         {
             var userProfile = await UserProfileAccessor.GetAsync(step.Context, () => null);
-            var stepResult = (string)step.Result;
+            var stepResult = getResult(step);
             string expression="";
 
 
@@ -163,6 +166,33 @@ namespace sample
             Q.Hostname = Hostname;
             return new QnAMaker(Q);
         }
+        PromptOptions suggestActionsOptions(string prompt,string[] choices)
+        {
+            List&lt;Choice> LC = new List&lt;Choice>();
+            foreach (var item in choices)
+            {
+                LC.Add(new Choice(item));
+            }
+            var opts = new PromptOptions
+            {
+                Prompt = MessageFactory.Text(prompt),
+                Choices = LC
+            };
 
+            return opts;
+        }
+        string getResult(WaterfallStepContext step)
+        {
+            string stepResult = "";
+            try
+            {
+                stepResult = (string)step.Result;
+            }
+            catch (Exception)
+            {
+                stepResult = ((FoundChoice)step.Result).Value;
+            }
+            return stepResult;
+        }
     }
 }

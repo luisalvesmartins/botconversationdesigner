@@ -19,11 +19,14 @@ var menu=
       var PROMPT_FUNCTION="prompt";
       var PROMPT_CONVERSION="var promptoptions=text;";
       var GETUSERPROFILE="let userProfile = await this.userProfileAccessor.get(step.context);\n";
-      var SUGGESTEDACTIONS="suggestedActions";
+      var SUGGESTEDACTIONS="this.suggestActionsOptions";
       var LUIS_RECOGNIZE="var results = await luisRecognizer.recognize(step.context);var topIntent = LuisRecognizer.topIntent(results);";
       var QNA_RESULTS="var qnaResults = await qnaMaker.generateAnswer(stepResult, 1, 0.1); if (qnaResults[0]) {var res=qnaResults[0].answer;";
+      var ARRAY_PREFIX="[";
+      var ARRAY_SUFIX="]";
+      var CHOICE_FUNCTION="NAME_PROMPT";
 
-      menu.exportcore(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS,LUIS_RECOGNIZE,QNA_RESULTS);
+      menu.exportcore(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS,LUIS_RECOGNIZE,QNA_RESULTS,ARRAY_PREFIX,ARRAY_SUFIX,CHOICE_FUNCTION);
 
     });
   },
@@ -37,17 +40,20 @@ var menu=
       var PROMPT_FUNCTION="PromptAsync";
       var PROMPT_CONVERSION="var promptoptions = new PromptOptions{Prompt = new Activity{Type = ActivityTypes.Message,Text = text,}};";
       var GETUSERPROFILE="var userProfile = await UserProfileAccessor.GetAsync(step.Context, () => null);\n";
-      var SUGGESTEDACTIONS="SuggestedActions";
+      var SUGGESTEDACTIONS="suggestActionsOptions";
       var LUIS_RECOGNIZE="var results = await luisRecognizer.RecognizeAsync(step.Context,new CancellationToken());var topIntent = LuisRecognizer.TopIntent(results);";
       var QNA_RESULTS="var qnaResults = await qnaMaker.GetAnswersAsync(step.Context); if (qnaResults.Length>0) {var res=qnaResults[0].Answer;";
+      var ARRAY_PREFIX="new string[]{";
+      var ARRAY_SUFIX="}";
+      var CHOICE_FUNCTION="CHOICE_PROMPT";
 
-      menu.exportcore(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS,LUIS_RECOGNIZE,QNA_RESULTS);
+      menu.exportcore(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS,LUIS_RECOGNIZE,QNA_RESULTS,ARRAY_PREFIX,ARRAY_SUFIX,CHOICE_FUNCTION);
       });
     },
   comment:function(element){
     return element.type + '-' + replaceAll(element.text,'\n','');
   },
-  exportcore:function(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS,LUIS_RECOGNIZE,QNA_RESULTS){
+  exportcore:function(template,CONTEXT_NEXT,STRING_DECLARATION,SEND_ACTIVITY,STEP_DECLARATION,FUNCTION_DECLARATION,PROMPT_FUNCTION,PROMPT_CONVERSION,GETUSERPROFILE,SUGGESTEDACTIONS,LUIS_RECOGNIZE,QNA_RESULTS,ARRAY_PREFIX,ARRAY_SUFIX,CHOICE_FUNCTION){
     var flow=LoadAndSave.prepareSave().flow;
     //ORDER ELEMENTS
     var startElement=searchArray(flow,"START","type");
@@ -150,8 +156,7 @@ var menu=
           output+=`   return await this.STEP_${element.newIndex}(step);\n`;
           functions+=`\n${FUNCTION_DECLARATION}STEP_${element.newIndex}(${STEP_DECLARATION}step) //${menu.comment(element)}
           {
-            var reply = MessageFactory.${SUGGESTEDACTIONS}([${op}], await this.ReplacePragmas(step,STRING_${element.newIndex}) );
-            return await step.${PROMPT_FUNCTION}(NAME_PROMPT,reply);
+            return await step.${PROMPT_FUNCTION}(${CHOICE_FUNCTION},${SUGGESTEDACTIONS}(await this.ReplacePragmas(step,STRING_${element.newIndex}), ${ARRAY_PREFIX}${op}${ARRAY_SUFIX}));
           }\n`;
           movenext +=`this.addProp(userProfile,"${element.parVar}",stepResult);            ${s}\n            break;\n`;
           break;
