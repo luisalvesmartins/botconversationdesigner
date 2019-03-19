@@ -1,7 +1,5 @@
 # bot conversation designer
 
-## NOTE: IN ACTIVE DEVELOPMENT (Check Implementation Backlog)
-
 Design and debug visually your bot conversations.
 
 Create the Microsoft Bot Framework code (node or c#) automatically from the designer.
@@ -42,4 +40,3 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
     - API
     - DIALOG
 - (new feature) Enable check if variable is already filled for any activity
-- (new feature) Enable bot syntax: **bot** _TYPE_:text like: botINPUT:What's your name? or bot:CHOICE:Pick an option
