@@ -756,6 +756,7 @@ var Bot={
         "role": "user"
       },
       "text": text,
+      "say":text,
       "timestamp": "2018-10-18T15:21:07.82108Z",
       "type": "message",
       "channelId": "web"
@@ -869,6 +870,11 @@ var Bot={
               messages.push({type:"MESSAGE", text:topScoringIntent});
             }
             var nxt=Bot.getNext(a.next,text);
+            //CHECK INVALID CHOICE
+            if (a.type=="CHOICE" && !nxt)
+              nxt=a.key;
+            if (a.type=="LUIS" && !nxt)
+              nxt=a.key;
             if (nxt)
             {
               var goto=searchArray(flow,nxt,"key")

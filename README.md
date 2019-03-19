@@ -30,6 +30,7 @@ Play with it here: https://lambot.blob.core.windows.net/github/botconversationde
 if you want to try some demo flows, when you press load load the url link instead of a local file: 
 https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.botdesign 
 
+- File content is compatible with botengine project
 
 ## Implementation backlog:
 - EXPORT TO Node missing features
