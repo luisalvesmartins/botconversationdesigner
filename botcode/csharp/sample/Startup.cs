@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
+using Microsoft.Bot.Builder.Integration.ApplicationInsights.Core;
 using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Extensions.Configuration;
@@ -131,6 +132,9 @@ namespace sample
             var userState = new UserState(dataStore);
             services.AddSingleton(userState);
 
+            // Use Application Insights
+            services.AddBotApplicationInsights(botConfig);
+
             services.AddBot<sampleBot>(options =>
           {
               options.CredentialProvider = new SimpleCredentialProvider(endpointService.AppId, endpointService.AppPassword);
@@ -138,6 +142,12 @@ namespace sample
                 // Catches any errors that occur during a conversation turn and logs them to currently
                 // configured ILogger.
                 ILogger logger = _loggerFactory.CreateLogger<sampleBot>();
+
+              // Telemetry Middleware (logs activity messages in Application Insights)
+              var sp = services.BuildServiceProvider();
+              var telemetryClient = sp.GetService<IBotTelemetryClient>();
+              var appInsightsLogger = new TelemetryLoggerMiddleware(telemetryClient, logUserName: true, logOriginalMessage: true);
+              options.Middleware.Add(appInsightsLogger);
 
               options.OnTurnError = async (context, exception) =>
               {
