@@ -4,10 +4,13 @@
     <title>Bot Conversation Designer</title>
     <meta charset="UTF-8"/>
     <link href="css/style.css" rel="stylesheet" />
+    <link href="css/jquer.modal.min.css" rel="stylesheet" />
     <script src="js/go.js"></script>
+    <script src="js/menu.js"></script>
     <script src="js/diagram.js"></script>
     <script src="js/activities.js"></script>
     <script src="js/jquery-3.1.1.min.js"></script>
+    <script src="js/jquery.modal.min.js"></script>
     <script src="js/offlinebotchatv4.js"></script>
     <script src="js/cardFactory.js"></script>
 </head>
@@ -21,7 +24,7 @@
         <button onclick="menu.PlayStep()">Play From Step</button>
         <button onclick="menu.exportCsharp()" style="margin-left: 20px;">Export to C#</button>
         <button onclick="menu.exportNodejs()">Export to Node</button>
-        <input type="checkbox" id="cookiePreserve" onclick="menu.preserve()">Preserve actual design in cookie 
+        <button onclick="menu.settings()" style="margin-left: 20px;">Settings</button>
     </div>
 <div id="main">
         <div id="left" class="panel">
@@ -126,6 +129,11 @@ window.onload=async function()
             if (localStorage.cookiePreserve)
             {
                 console.log(localStorage.cookiePreserve)
+                if (localStorage.chkLUISDebug=="true")
+                    document.all("chkLUISDebug").checked=true;
+                else
+                    document.all("chkLUISDebug").checked=false;
+
                 if (localStorage.cookiePreserve=="true")
                     document.all("cookiePreserve").checked=true;
                 else
@@ -157,5 +165,28 @@ window.onload=async function()
   gtag('js', new Date());
   gtag('config', 'UA-135656500-1');
 </script>
+    <div id="Settings" class="modal">
+        <input type="checkbox" id="cookiePreserve" onclick="menu.preserve()">Preserve actual design in cookie<br>
+        This option will store the current flow in your browser local storage. No need to load and save the model continuously until you arrive a final design. Nevertheless... Save Always, Save Often!
+        <br><br>
+        <input type="checkbox" id="chkLUISDebug" onclick="menu.preserve()">Edit LUIS responses<br>
+        With this option checked everytime there is a LUIS call activity you will have the possibility to add your text to the intent or change the selected intent. This changes the LUIS model, you'll need to train and publish it again. NOTE: No option to add entities yet. Work in Progress!
+    </div>
+    <div id="DebugLUIS" class="modal">
+        <div style="font-weight:bold">Query</div>
+        <div id="DebugLUISQuery"></div>
+        <div style="font-weight:bold;margin-top:5px;">Understood</div>
+        <div id="DebugLUISUnderstood"></div>
+        <div style="font-weight:bold;margin-top:5px;">Top Intent</div>
+        <div id="DebugLUISTopIntent"></div>
+        <input type=hidden id="DebugLUISTopIntentVal"/>
+        <div style="font-weight:bold;margin-top:5px;">
+            <button onclick="$.modal.close();">Accept</button>
+            <div id="divReassignIntent">
+                <select id=newIntent></select>
+                <button style="margin-left:20px;" onclick="LUISAddUtterance();$.modal.close();">Add utterance to intent</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

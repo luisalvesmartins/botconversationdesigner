@@ -27,6 +27,8 @@ Play with it here: https://lambot.blob.core.windows.net/github/botconversationde
 
 <img src="images/image4.png" alt="Export" width="400px"/>
 
+- Enable to add LUIS utterances when you are running the flow in debug mode.
+
 if you want to try some demo flows, when you press load load the url link instead of a local file: 
 https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.botdesign 
 
@@ -41,3 +43,4 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
     - API
     - DIALOG
 - (new feature) Enable check if variable is already filled for any activity
+- Enable publishing LUIS utterances with entities definition.
