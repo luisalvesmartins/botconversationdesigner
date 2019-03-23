@@ -1,4 +1,4 @@
-var myDiagram;
+var myDiagram,myPalette;
 function goDiagram(){
     var $ = go.GraphObject.make;  // for conciseness in defining templates
 
@@ -34,7 +34,7 @@ function goDiagram(){
 
     // when the document is modified, add a "*" to the title and enable the "Save" button
     myDiagram.addDiagramListener("Modified", function(e) {
-      var button = document.getElementById("SaveButton");
+      //var button = document.getElementById("SaveButton");
       //if (button) button.disabled = !myDiagram.isModified;
       var idx = document.title.indexOf("*");
       if (myDiagram.isModified) {
@@ -112,14 +112,15 @@ function goDiagram(){
               portId: "", // the default port: if no spot on link data, use closest side
               fromLinkable: true, toLinkable: true, cursor: "pointer",
               fill: "white",  // default color
-              strokeWidth: 2
+              strokeWidth: 1,
+              stroke:"lightgray"
             },
             new go.Binding("figure"),
             new go.Binding("opacity"),
             new go.Binding("fill")),
           $(go.TextBlock,
             {
-              font: "bold 9pt Helvetica, Arial, sans-serif",
+              font: "8pt Helvetica, Arial, sans-serif",
               margin: 8,
               maxSize: new go.Size(160, NaN),
               wrap: go.TextBlock.WrapFit,
@@ -226,25 +227,25 @@ function goDiagram(){
                 { toArrow: "Standard", stroke: null })
             ),
           model: new go.GraphLinksModel([  // specify the contents of the Palette
-            { text: "Start", figure: "Circle", fill: "#00AD5F", type:"START", key:"1" },
-            { text: "Input", type:"INPUT" },
-            { text: "Choice", figure: "RoundedRectangle", fill: "#eeee00", type:"CHOICE" },
-            { text: "???", figure: "Diamond", fill: "lightskyblue", type:"IF" },
-            { text: "Message", figure: "RoundedRectangle", fill: "lightyellow", type:"MESSAGE" },
-            { text: "LUIS", figure: "RoundedRectangle", fill: "lightgreen", type:"LUIS" },
-            { text: "QNA", figure: "RoundedRectangle", fill: "#77CC77", type:"QNA" },
-            { text: "API", figure: "RoundedRectangle", fill: "#FF7777", type:"API" },
-            { text: "Card", type:"CARD",fill: "lightyellow" },
-            { text: "Dialog", type:"DIALOG", figure: "RoundedRectangle", fill: "#FFdddd" },
-            { text: "Reset Var", type:"RESETVAR", figure: "RoundedRectangle", fill: "#FF3333" }
+            // { text: "Start", figure: "Circle", fill: "#00AD5F", type:"START", key:"1" },
+            // { text: "Input", type:"INPUT" },
+            // { text: "Choice", figure: "RoundedRectangle", fill: "#eeee00", type:"CHOICE" },
+            // { text: "???", figure: "Diamond", fill: "lightskyblue", type:"IF" },
+            // { text: "Message", figure: "Rectangle", fill: "burlywood", type:"MESSAGE" },
+            // { text: "LUIS", figure: "Rectangle", fill: "lightgreen", type:"LUIS" },
+            // { text: "QNA", figure: "Rectangle", fill: "#77CC77", type:"QNA" },
+            // { text: "API", figure: "Rectangle", fill: "#FF7777", type:"API" },
+            // { text: "Card", type:"CARD",fill: "lightyellow" },
+            // { text: "Dialog", type:"DIALOG", figure: "Rectangle", fill: "#FFdddd" },
+            // { text: "Reset Var", type:"RESETVAR", figure: "Rectangle", fill: "#FF7777" }
           ]//, [
             // the Palette also has a disconnected Link, which the user can drag-and-drop
             //{ points: new go.List(go.Point).addAll([new go.Point(0, 0), new go.Point(30, 0), new go.Point(30, 40), new go.Point(60, 40)]) }
           //]
           )
         });
-  
-          // Define a function for creating a "port" that is normally transparent.
+
+        // Define a function for creating a "port" that is normally transparent.
     // The "name" is used as the GraphObject.portId, the "spot" is used to control how links connect
     // and where the port is positioned on the node, and the boolean "output" and "input" arguments
     // control whether the user can draw links from or to the port.

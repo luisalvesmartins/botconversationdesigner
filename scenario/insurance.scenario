@@ -1,0 +1,215 @@
+{
+    "Palette": [
+        {
+            "text": "Start",
+            "figure": "Circle",
+            "fill": "#00AD5F",
+            "type": "START"
+        },
+        {
+            "text": "Input",
+            "type": "INPUT"
+        },
+        {
+            "text": "Choice",
+            "figure": "RoundedRectangle",
+            "fill": "#eeee00",
+            "type": "CHOICE"
+        },
+        {
+            "text": "???",
+            "figure": "Diamond",
+            "fill": "lightskyblue",
+            "type": "IF"
+        },
+        {
+            "text": "Message",
+            "figure": "Rectangle",
+            "fill": "yellow",
+            "type": "MESSAGE"
+        },
+        {
+            "text": "IDENTIFY\nUSER",
+            "figure": "Rectangle",
+            "fill": "lightgreen",
+            "type": "USERAUTH"
+        },
+        {
+            "text": "IDENTIFY\nCAR",
+            "figure": "Rectangle",
+            "fill": "lightgreen",
+            "type": "CARAUTH"
+        },
+        {
+            "text": "MAINFRAME\nCALL",
+            "figure": "Rectangle",
+            "fill": "magenta",
+            "type": "MAINFRAME"
+        }        
+    ],
+    "Fields": [
+        {
+            "type": "API",
+            "Fields": [
+                {
+                    "name": "parVar"
+                },
+                {
+                    "name": "parAPI"
+                },
+                {
+                    "name": "parPar"
+                },
+                {
+                    "name": "parAPO"
+                }
+            ]
+        },
+        {
+            "type": "CARD",
+            "Fields": [
+                {
+                    "name": "parVar"
+                },
+                {
+                    "name": "parCar"
+                },
+                {
+                    "name": "parCrd"
+                }
+            ]
+        },
+        {
+            "type": "CHOICE",
+            "Fields": [
+                {
+                    "name": "parVar"
+                }
+            ]
+        },
+        {
+            "type": "DIALOG",
+            "Fields": [
+                {
+                    "name": "parAPI",
+                    "title": "Dialog Name"
+                }
+            ]
+        },
+        {
+            "type": "IF",
+            "Fields": [
+                {
+                    "name": "parCon"
+                }
+            ]
+        },
+        {
+            "type": "INPUT",
+            "Fields": [
+                {
+                    "name": "parVar"
+                },
+                {
+                    "name": "parTyp"
+                },
+                {
+                    "name": "parCkv"
+                }
+            ]
+        },
+        {
+            "type": "LUIS",
+            "Fields": [
+                {
+                    "name": "parVar"
+                },
+                {
+                    "name": "parURL",
+                    "default": "https://westus.api.cognitive.microsoft.com/"
+                },
+                {
+                    "name": "parKey",
+                    "default": "authoringkey",
+                    "title": "Authoring Key"
+                },
+                {
+                    "name": "parPar",
+                    "default": "guid",
+                    "title": "Appliaction Id"
+                },
+                {
+                    "name": "parLMI",
+                    "default": "0.5"
+                },
+                {
+                    "name": "parCkv"
+                }
+            ]
+        },
+        {
+            "type": "MESSAGE",
+            "Fields": []
+        },
+        {
+            "type": "QNA",
+            "Fields": [
+                {
+                    "name": "parVar"
+                },
+                {
+                    "name": "parURL",
+                    "default": "https://yourdeployment.azurewebsites.net/qnamaker"
+                },
+                {
+                    "name": "parKey",
+                    "title": "EndpointKey",
+                    "default": "guid"
+                },
+                {
+                    "name": "parPar",
+                    "title": "Knowledgebase",
+                    "default": "guid"
+                }
+            ]
+        },
+        {
+            "type": "RESETVAR",
+            "Fields": [
+                {
+                    "name": "parVar",
+                    "title": "List of variables to erase separated by comma"
+                }
+            ]
+        },
+        {
+            "type": "START",
+            "Fields": []
+        },
+        {
+            "type": "USERAUTH",
+            "Fields": [ {
+                "name": "parVar",
+                "title": "User ID"
+            }]
+        },
+        {
+            "type": "CARAUTH",
+            "Fields": [ {
+                "name": "parVar",
+                "title": "Vehicle ID"
+            }]
+        },
+        {
+            "type": "MAINFRAME",
+            "Fields": [ {
+                "name": "parVar",
+                "title": "Function"
+            },
+            {
+                "name": "parPar",
+                "title": "Parameters"
+            }]
+        }
+    ]
+}
