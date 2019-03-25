@@ -490,11 +490,12 @@ var Bot = {
          
               //FILTER= a.parKey
               var results=dom.selectAll(a.parKey);
-              console.log(results);
               var extension="";
               for (let index = 0; index < results.length; index++) {
                   const element = results[index];
-  
+
+                  var dom2 = jsel(element);
+
                   //SEARCH a.parCrd for ${}
                   var crd=a.parCrd;
                   var p=1;
@@ -505,7 +506,7 @@ var Bot = {
                       var pd=crd.indexOf("}",p);
                       var field=crd.substring(p+2,pd);
 
-                      var text=element[field];
+                      var text=dom2.select(field);
   
                       crd=crd.substring(0,p) + text + crd.substring(pd+1);
                     }
@@ -536,7 +537,6 @@ var Bot = {
                 // console.log("INPUT")
                 // console.log(goto.type)
                 if (goto.parCkv == "No" && Bot.userData[goto.parVar]) {
-                  // console.log("DO NOT SHOW")
                   bSendMessage = false;
                   condition = true;
                 }

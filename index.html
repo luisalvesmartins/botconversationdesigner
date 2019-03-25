@@ -249,7 +249,7 @@
                         { name: "parPar", title: "REST CALL", default: "POST http://url.com\nAUTHORIZATION: Basic XXX\n\n{data:''}" },
                         { name: "parKey", title: "Response XPath", default: "//result" },
                         { name: "parAPO", title: "Output" },  
-                        { name: "parCrd", title:"Card",default:'{"contentType":"application/vnd.microsoft.card.hero","content":{"title":"${title}","text":"${text}","images":[],"buttons":[{"type":"postBack","title":"button","value":"buttonvalue"}]}}' }
+                        { name: "parCrd", title:"Card - use ${xpath to field}",default:'{"contentType":"application/vnd.microsoft.card.hero","content":{"title":"${title}","text":"${text}","images":[],"buttons":[{"type":"postBack","title":"button","value":"buttonvalue"}]}}' }
                         ],
                         waitForUserInput: "false",
                         showMessage:"false"
