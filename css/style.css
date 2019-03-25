@@ -49,9 +49,14 @@
     flex: 0 0 200px;
     -webkit-flex: 0 0 200px;
   }
+  .bigpanel {
+    flex: 0 0 600px;
+    -webkit-flex: 0 0 600px;
+    max-width:600px;
+  }
   #left.panel {
-    flex: 0 0 350px;
-    -webkit-flex: 0 0 350px;
+    flex: 0 0 400px;
+    -webkit-flex: 0 0 400px;
   }
   #left2.panel {
     flex: 0 0 400px;
@@ -94,4 +99,10 @@
   right: 0px;
   top: 0px;
   z-index: 1;
+  cursor:pointer;
+}
+button {
+  border: 1px solid gray;
+  padding: 5px;
+  cursor: pointer;
 }

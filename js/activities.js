@@ -170,7 +170,11 @@ var ParameterList = [
   { name: "parAPI", default: "" }, //API name
   { name: "parAPO", default: "" }, //API Output
   { name: "parCrd", default: "" }, //Card Definition
-  { name: "parCkv", default: "yes" } //Check if variable exists
+  { name: "parCkv", default: "yes" }, //Check if variable exists
+  { name: "parTx0", default: "" }, //Text 0
+  { name: "parTx1", default: "" }, //Text 1
+  { name: "parTx2", default: "" }, //Text 2
+  { name: "parTx3", default: "" } //Text 3
 ];
 
 function GetFieldList(dataType) {
@@ -179,6 +183,17 @@ function GetFieldList(dataType) {
       const element = scenario.Fields[index];
       if (element.type == dataType)
         return element.Fields;
+    }
+
+  }
+  return [];
+}
+function GetTypeDefinition(dataType) {
+  if (scenario) {
+    for (let index = 0; index < scenario.Fields.length; index++) {
+      const element = scenario.Fields[index];
+      if (element.type == dataType)
+        return element;
     }
 
   }
@@ -193,28 +208,28 @@ function DisplayProperties(data) {
     sHTML += "<div id=t_" + field.name + ">";
     switch (field.name) {
       case "parCrd":
-        sHTML += "Card Definition</div><TEXTAREA id=parCrd onkeyup='parSave()' rows=14 cols=21 style='width:180px'></TEXTAREA>"
+        sHTML += "Card Definition</div><TEXTAREA id=parCrd onkeyup='parSave()' rows=14 cols=21 style='width:100%'></TEXTAREA>"
         break;
       case "parVar":
-        sHTML += "VARIABLE</div><INPUT type=text id=parVar onkeyup='parSave()' style='width:180px'>"
+        sHTML += "VARIABLE</div><INPUT type=text id=parVar onkeyup='parSave()' style='width:100%'>"
         break;
       case "parTyp":
-        sHTML += "TYPE OF INPUT</div><INPUT type=text id=parTyp onkeyup='parSave()' style='width:180px'>"
+        sHTML += "TYPE OF INPUT</div><INPUT type=text id=parTyp onkeyup='parSave()' style='width:100%'>"
         break;
       case "parURL":
-        sHTML += "URL</div><TEXTAREA id=parURL onkeyup='parSave()' rows=6 cols=21 style='width:180px'></TEXTAREA>"
+        sHTML += "URL</div><TEXTAREA id=parURL onkeyup='parSave()' rows=6 cols=21 style='width:100%'></TEXTAREA>"
         break;
       case "parKey":
-        sHTML += "Key</div><INPUT type=text id=parKey onkeyup='parSave()' style='width:180px'>"
+        sHTML += "Key</div><INPUT type=text id=parKey onkeyup='parSave()' style='width:100%'>"
         break;
       case "parLMI":
-        sHTML += "Minimum Score</div><INPUT type=text id=parLMI onkeyup='parSave()' style='width:90px'>"
+        sHTML += "Minimum Score</div><INPUT type=text id=parLMI onkeyup='parSave()' style='width:100%'>"
         break;
       case "parPar":
-        sHTML += "Parameters</div><TEXTAREA id=parPar onkeyup='parSave()' rows=6 cols=21 style='width:180px'></TEXTAREA>"
+        sHTML += "Parameters</div><TEXTAREA id=parPar onkeyup='parSave()' rows=6 cols=21 style='width:100%'></TEXTAREA>"
         break;
       case "parCon":
-        sHTML += "Condition</div><TEXTAREA id=parCon onkeyup='parSave()' rows=6 cols=21 style='width:180px'></TEXTAREA>"
+        sHTML += "Condition</div><TEXTAREA id=parCon onkeyup='parSave()' rows=6 cols=21 style='width:100%'></TEXTAREA>"
         break;
       case "parCkv":
         sHTML += "Prompt even if variable already defined</div><SELECT id=parCkv onkeyup='parSave()' onchange='parSave()'>" +
@@ -236,7 +251,7 @@ function DisplayProperties(data) {
           "</select>";
         break;
       case "parAPI":
-        sHTML += "API or URL</div><INPUT type=text id=parAPI onkeyup='parSave()' style='width:180px'>"
+        sHTML += "API or URL</div><INPUT type=text id=parAPI onkeyup='parSave()' style='width:100%'>"
         break;
       case "parAPO":
         sHTML += "API Output</div><SELECT id=parAPO onkeyup='parSave()' onchange='parSave()'>" +
@@ -244,6 +259,18 @@ function DisplayProperties(data) {
           "<option>Variable</option>" +
           "<option>MessageContent</option>" +
           "</select>";
+        break;
+      case "parTx0":
+        sHTML += "VARIABLE</div><INPUT type=text id=parTx0 onkeyup='parSave()' style='width:100%'>"
+        break;
+      case "parTx1":
+        sHTML += "VARIABLE</div><INPUT type=text id=parTx1 onkeyup='parSave()' style='width:100%'>"
+        break;
+      case "parTx2":
+        sHTML += "VARIABLE</div><INPUT type=text id=parTx2 onkeyup='parSave()' style='width:100%'>"
+        break;
+      case "parTx3":
+        sHTML += "VARIABLE</div><INPUT type=text id=parTx3 onkeyup='parSave()' style='width:100%'>"
         break;
       default:
         break;
@@ -291,7 +318,8 @@ var LoadAndSave = {
         key: gO.key, text: gO.text, type: gO.type, next: toLink,
         parVar: gO.parVar, parURL: gO.parURL, parKey: gO.parKey, parTyp: gO.parTyp, parLMI: gO.parLMI,
         parCon: gO.parCon, parPar: gO.parPar, parCar: gO.parCar, parAPI: gO.parAPI, parAPO: gO.parAPO,
-        parCrd: gO.parCrd, parCkv: gO.parCkv
+        parCrd: gO.parCrd, parCkv: gO.parCkv, 
+        parTx0: gO.parTx0, parTx1:gO.parTx1, parTx2: gO.parTx2, parTx3:gO.parTx3
       })
     }
     return botObject;
@@ -437,6 +465,9 @@ var Bot = {
 
           var messages = [];
           do {
+            // console.log("TYPE:" + a.type);
+            // console.log("MESSAGES");
+            // console.log(JSON.stringify(messages));
             condition = false;
             var text = activity.text;
             if (a.type == "IF") {
@@ -450,18 +481,57 @@ var Bot = {
             if (a.type == "QNA") {
               messages.push({ type: "MESSAGE", text: topScoringIntent });
             }
+            if (a.type=="REST")
+            {
+              //REST= a
+              var post = Bot.ReplacePragmas(a.parPar);
+              var returnValue=RESTCall(post);
+              var dom = jsel(JSON.parse(returnValue));
+         
+              //FILTER= a.parKey
+              var results=dom.selectAll(a.parKey);
+              console.log(results);
+              var extension="";
+              for (let index = 0; index < results.length; index++) {
+                  const element = results[index];
+  
+                  //SEARCH a.parCrd for ${}
+                  var crd=a.parCrd;
+                  var p=1;
+                  while(p>0) {
+                    p=crd.indexOf("${");
+                    if (p>=0)
+                    {
+                      var pd=crd.indexOf("}",p);
+                      var field=crd.substring(p+2,pd);
+
+                      var text=element[field];
+  
+                      crd=crd.substring(0,p) + text + crd.substring(pd+1);
+                    }
+                  }
+  
+                  if (extension!="")
+                      extension+=","
+                  extension+=crd;
+              }
+              extension="[" + extension + "]";
+          
+              messages.push({ type: "REST", text: "", attachmentLayout:"carousel", extension:{ "attachments": JSON.parse(extension) } });
+            }
+  
+            var FieldDefinition=GetTypeDefinition(a.type)
+
             var nxt = Bot.getNext(a.next, text);
             //CHECK INVALID CHOICE
-            if (a.type == "CHOICE" && !nxt)
-              nxt = a.key;
-            if (a.type == "LUIS" && !nxt)
-              nxt = a.key;
+            if (!nxt && FieldDefinition.needValidChoice=="true")
+              nxt=a.key;
             if (nxt) {
               var goto = searchArray(flow, nxt, "key")
+              var FieldDefinition=GetTypeDefinition(goto.type)
               var bSendMessage = true;
-              if (goto.type == "IF") {
+              if (FieldDefinition.showMessage=="false")
                 bSendMessage = false;
-              }
               if (goto.type == "INPUT") {
                 // console.log("INPUT")
                 // console.log(goto.type)
@@ -474,8 +544,6 @@ var Bot = {
               if (goto.type == "DIALOG") {
                 goto.text = "Transfer to Dialog " + goto.parAPI;
                 messages.push(goto);
-                condition = false;
-                bSendMessage = false;
               }
               if (goto.type == "RESETVAR") {
                 var a = goto.parVar.split(",");
@@ -483,8 +551,8 @@ var Bot = {
                   const element = a[index];
                   delete Bot.userData[element];
                 }
-                bSendMessage = false;
               }
+
               if (bSendMessage) {
                 messages.push(goto);
               }
@@ -492,7 +560,9 @@ var Bot = {
               myDiagram.select(myDiagram.findNodeForKey(nxt));
 
               var a = searchArray(flow, nxt, "key")
-              if (a.type == "MESSAGE" || a.type == "START" || a.type == "API" || a.type == "IF" || a.type == "RESETVAR")
+              FieldDefinition=GetTypeDefinition(a.type)
+              //if (a.type == "MESSAGE" || a.type == "START" || a.type == "API" || a.type == "IF" || a.type == "RESETVAR" || a.type=="REST")
+              if (FieldDefinition.waitForUserInput!="true")
                 condition = true;
             }
             else {
@@ -500,8 +570,6 @@ var Bot = {
             }
           } while (condition);
           $("#userdatavalue").html(JSON.stringify(Bot.userData));
-          // console.log("MESSAGES")
-          // console.log(messages)
           Bot.sendBotMessage(messages);
         }
         else {
@@ -537,9 +605,9 @@ var Bot = {
     var activities = [];
     for (let i = 0; i < flowItems.length; i++) {
       const flowItem = flowItems[i];
+      var attachmentLayout="";
 
-
-      var extension;
+      var extension=null;
       switch (flowItem.type) {
         case "CARD":
           switch (flowItem.parCar) {
@@ -571,20 +639,12 @@ var Bot = {
           extension = { "suggestedActions": { "actions": actions } };
           break;
         case "IF":
-          // var actions=[];
-          // flowItem.next.forEach(element => {
-          //   var t=Bot.ReplacePragmas(element.text);
-          //   actions.push({title:t, type:"imBack", value:t});
-          // });
-          // extension={"suggestedActions": {"actions":actions}};
           break;
         case "LUIS":
-          // var actions=[];
-          // flowItem.next.forEach(element => {
-          //   var t=Bot.ReplacePragmas(element.text);
-          //   actions.push({title:t, type:"imBack", value:t});
-          // });
-          // extension={"suggestedActions": {"actions":actions}};
+          break;
+        case "REST":
+          attachmentLayout=flowItem.attachmentLayout;
+          extension=flowItem.extension;
           break;
         default:
           break;
@@ -610,6 +670,7 @@ var Bot = {
         "text": t,
         "timestamp": (new Date).toISOString(),
         "type": "message",
+        "attachmentLayout":attachmentLayout,
         "channelId": "web",
       }, extension));
       //Bot.sendMessage(flowItem.text, extension);
@@ -742,4 +803,57 @@ function comparePos(a, b) {
   if (a.startIndex > b.startIndex)
     return -1;
   return 0;
+}
+
+
+function parseREST(command){
+  //POST url
+  //headers
+  //(empty)
+  //data
+  var lines=command.split('\n');
+  lines[0]=lines[0].trim();
+  var p=lines[0].indexOf(' ');
+  var verb="GET";
+  var url=lines[0];
+  if (p>0)
+  {
+    verb=lines[0].substring(0,p);
+    url=lines[0].substring(p+1);
+  }
+  var header="";
+  var index;
+  for (index = 1; index < lines.length; index++) {
+    const element = lines[index].trim();
+    if (element=="")
+      break;
+    else{
+      p=element.indexOf(':');
+      if (p<=0)
+        return {error:"no header dev"}
+      if (header!="")        
+        header+=",";
+      header+="\"" + element.substring(0,p).trim() + "\":\"" + element.substring(p+1).trim() + "\"";
+    }
+  }
+  header="{" + header + "}";
+
+  var data="";
+  for (index=index;index < lines.length; index++) {
+    data+=lines[index];
+  }
+  return {verb:verb, url:url, headers:JSON.parse(header), data:data};
+}
+function RESTCall(s){
+  var r=parseREST(s);
+  return ($.ajax({
+      method:r.verb,
+      url:r.url,
+      headers:r.headers,
+      data:r.data,
+      async:false,
+      error:function(x,message){
+        alert(message)
+      }
+  }).responseText);
 }

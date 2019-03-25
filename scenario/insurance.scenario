@@ -63,7 +63,8 @@
                 {
                     "name": "parAPO"
                 }
-            ]
+            ],
+            "waitForUserInput": "false"
         },
         {
             "type": "CARD",
@@ -77,7 +78,8 @@
                 {
                     "name": "parCrd"
                 }
-            ]
+            ],
+            "waitForUserInput": "true"
         },
         {
             "type": "CHOICE",
@@ -85,7 +87,9 @@
                 {
                     "name": "parVar"
                 }
-            ]
+            ],
+            "waitForUserInput": "true",
+            "needValidChoice": "true"
         },
         {
             "type": "DIALOG",
@@ -94,7 +98,9 @@
                     "name": "parAPI",
                     "title": "Dialog Name"
                 }
-            ]
+            ],
+            "waitForUserInput": "false",
+            "showMessage": "false"
         },
         {
             "type": "IF",
@@ -102,7 +108,9 @@
                 {
                     "name": "parCon"
                 }
-            ]
+            ],
+            "waitForUserInput": "false",
+            "showMessage": "false"
         },
         {
             "type": "INPUT",
@@ -116,7 +124,8 @@
                 {
                     "name": "parCkv"
                 }
-            ]
+            ],
+            "waitForUserInput": "true"
         },
         {
             "type": "LUIS",
@@ -145,11 +154,14 @@
                 {
                     "name": "parCkv"
                 }
-            ]
+            ],
+            "waitForUserInput": "true",
+            "needValidChoice": "true"
         },
         {
             "type": "MESSAGE",
-            "Fields": []
+            "Fields": [],
+            "waitForUserInput": "false"
         },
         {
             "type": "QNA",
@@ -171,7 +183,8 @@
                     "title": "Knowledgebase",
                     "default": "guid"
                 }
-            ]
+            ],
+            "waitForUserInput": "true"
         },
         {
             "type": "RESETVAR",
@@ -180,25 +193,61 @@
                     "name": "parVar",
                     "title": "List of variables to erase separated by comma"
                 }
-            ]
+            ],
+            "waitForUserInput": "false",
+            "showMessage": "false"
         },
         {
             "type": "START",
-            "Fields": []
+            "Fields": [],
+            "waitForUserInput": "false"
+        },
+        {
+            "type": "REST",
+            "Fields": [
+                {
+                    "name": "parVar"
+                },
+                {
+                    "name": "parPar",
+                    "title": "REST CALL",
+                    "default": "POST http://url.com\nAUTHORIZATION: Basic XXX\n\n{data:''}"
+                },
+                {
+                    "name": "parKey",
+                    "title": "Response XPath",
+                    "default": "//result"
+                },
+                {
+                    "name": "parAPO",
+                    "title": "Output"
+                },
+                {
+                    "name": "parCrd",
+                    "title": "Card",
+                    "default": "{\"contentType\":\"application/vnd.microsoft.card.hero\",\"content\":{\"title\":\"${title}\",\"text\":\"${text}\",\"images\":[],\"buttons\":[{\"type\":\"postBack\",\"title\":\"button\",\"value\":\"buttonvalue\"}]}}"
+                }
+            ],
+            "waitForUserInput": "false",
+            "showMessage": "false"
         },
         {
             "type": "USERAUTH",
             "Fields": [ {
                 "name": "parVar",
                 "title": "User ID"
-            }]
+            }],
+            "waitForUserInput": "true",
+            "showMessage": "true"
         },
         {
             "type": "CARAUTH",
             "Fields": [ {
                 "name": "parVar",
                 "title": "Vehicle ID"
-            }]
+            }],
+            "waitForUserInput": "true",
+            "showMessage": "true"
         },
         {
             "type": "MAINFRAME",
@@ -209,7 +258,9 @@
             {
                 "name": "parPar",
                 "title": "Parameters"
-            }]
+            }],
+            "waitForUserInput": "true",
+            "showMessage": "true"
         }
     ]
 }

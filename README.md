@@ -39,13 +39,29 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
 
 - File content is compatible with botengine project
 
+- Builtin activities
+    - Start - Initialize the flow
+    - Input - Ask for user input
+    - Choice - Presents navigation options to user
+    - If - Evaluates condition, flows to true or false branches
+    - Message - Displays a message
+    - LUIS - Calls LUIS
+    - QNA - Calls QNA
+    - Card - Presents a Card
+    - API - Calls an API
+    - Dialog - Jumps to another Dialog
+    - Reset Var - Cleans specified variables
+    - REST Call - Performs a REST call
+
 ## Implementation backlog:
 - EXPORT TO Node missing features
     - API
     - DIALOG
+    - REST CALL
 - EXPORT TO C# missing features: 
     - card
     - API
     - DIALOG
+    - REST CALL
 - (new feature) Enable check if variable is already filled for any activity
 - Enable publishing LUIS utterances with entities definition.

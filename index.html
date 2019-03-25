@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
     <title>Bot Conversation Designer</title>
-    <meta charset="UTF-8"/>
+    <meta charset="UTF-8" />
     <link href="css/style.css" rel="stylesheet" />
     <link href="css/jquer.modal.min.css" rel="stylesheet" />
     <script src="js/go.js"></script>
@@ -13,10 +13,10 @@
     <script src="js/jquery.modal.min.js"></script>
     <script src="js/offlinebotchatv4.js"></script>
     <script src="js/cardFactory.js"></script>
+    <script src="js/jsel.js"></script>
 </head>
 <body>
     <div id="header"><b>bot</b>conversation<b>designer</b></div>
-    <style>button {border: 1px solid gray;padding:5px;cursor: pointer;}</style>
     <div style="position:absolute;top:24px;left:350px">
         <button onclick="menu.new()">New</button>
         <button onclick="menu.save()">Save</button>
@@ -31,7 +31,7 @@
     <div id="main">
         <div id="left" class="panel">
             <div class=largeChild style="position:relative">
-                <div class=wc-header><span style="font-size:15px">Chat</span></div>
+                <div class=wc-header onclick="toggleProps('#left')"><span style="font-size:15px">Chat</span></div>
                 <div id="botWC" style="padding-top:50px"></div>
             </div>
         </div>
@@ -46,182 +46,241 @@
         </div>
         <div id="right" class="panel">
             <div class=largeChild style="position:relative">
-                <div class=wc-header><span style="font-size:15px">Properties</span></div>
+                <div class=wc-header onclick="toggleProps('#right')"><span style="font-size:15px">Properties</span></div>
                 <div style="padding-top:50px;" id=propList></div>
-        
-                <textarea id="mySavedModel" style="display:none;width:100%;height:300px">{ "class": "go.GraphLinksModel","linkFromPortIdProperty": "fromPort","linkToPortIdProperty": "toPort","nodeDataArray": [],"linkDataArray": []}    </textarea>
-        
-                <div style="position:absolute;bottom:0px;width:190px;overflow-y:scroll;height:100px">
+
+                <textarea id="mySavedModel" style="display:none;width:100%;height:300px"></textarea>
+
+                <div style="position:absolute;bottom:0px;width:100%;overflow-y:scroll;height:100px">
                     <b>STACK VALUE</b>
                     <div id=userdatavalue style="width:165px;word-wrap: break-word;">
                         <i>empty</i>
                     </div>
                 </div>
-               
+
             </div>
         </div>
     </div>
-    <div id="footer">2019 Luis Alves Martins - <a href="http://github.com/luisalvesmartins">http://github.com/luisalvesmartins</a></div>
-
+    <div id="footer">2019 Luis Alves Martins - <a
+            href="http://github.com/luisalvesmartins">http://github.com/luisalvesmartins</a></div>
     <script>
-        
-var DirectLineEmulator;
-var scenario;
-window.onload=async function()
-{
-    const user = {
-        id: 'Luis',
-        name: 'Luis'
-    };
-    const bot = {
-        id: 'botid',
-        name: 'botname'
-    };
-    const styleOptions = {
-        bubbleBackground: 'rgba(0, 0, 255, .1)',
-        bubbleFromUserBackground: 'rgba(0, 255, 0, .1)',
-        botAvatarInitials: 'Bot',
-        userAvatarInitials: 'User',
-        showSpokenText: true,
-    };
-
-    var webSpeechPonyfillFactory = await window.WebChat.createCognitiveServicesSpeechServicesPonyfillFactory(
-        {
-        region: 'westeurope', 
-        subscriptionKey:'9759ebf6852047cfa596622a7089261e'
-    });
-
-
-    window.WebChat.renderWebChat({
-        directLine: window.WebChat.createDirectLine({token:'' }),
-        bot: bot,
-        user: user,
-        styleOptions,
-        webSpeechPonyfillFactory
-    }, document.getElementById('botWC'));
-
-    document.querySelector('#botWC > *').focus();
-  
-
-    DirectLineEmulator={
-      emptyActivity:{
-          "activities": [],
-          "watermark": "0"
-      },
-      userActivity:function(activity){
-      //Every time the user sends an activity:
-      //console.log(activity) 
-          Bot.receiveMessage(activity);
-      },
-      getActivity:function(activity){
-      //The bot polls this function every 1000ms, change activity to the message you want to display
-          //console.log("ACTIVITY SENT")
-          return this.emptyActivity;
-      }
-    }
-    goDiagram();
-    $('#fileToLoad').change(menu.handleFileSelect);
-    $('#fileScenarioToLoad').change(menu.handleFileScenarioSelect);
-
-    //OLD DEMO
-    //var model={"flow":[{"key":"1","text":"I am the Echo Bot Sample. \nHint: read the flow on the right and try the different paths","type":"START","next":[{"to":-2,"text":""}]},{"key":-2,"text":"Please shout something","type":"INPUT","next":[{"to":-5,"text":""}],"parVar":"SHOUT","parTyp":"","parCkv":"Yes"},{"key":-5,"text":"You said: {SHOUT}","type":"MESSAGE","next":[{"to":-4,"text":""}]},{"key":-4,"text":"Check if you are saying ECHO","type":"IF","next":[{"to":-6,"text":"true"},{"to":-2,"text":"false"}],"parCon":"\"{SHOUT}\"==\"ECHO\""},{"key":-6,"text":"ECHO... ECHO... ECHO...","type":"MESSAGE","next":[{"to":-7,"text":""}]},{"key":-7,"text":"Choose a color using natural language (LUIS)","type":"LUIS","next":[{"to":-8,"text":"blue_intent"},{"to":-9,"text":"red_intent"},{"to":-10,"text":"None"}],"parVar":"LUISVAR","parURL":"https://westus.api.cognitive.microsoft.com","parKey":"c6e72331a84c4d23a590c503c360c35b","parLMI":"0.5","parPar":"914db407-b188-442c-8306-c9cb781faadc","parCkv":"Yes"},{"key":-8,"text":"Blue: nice color!","type":"MESSAGE","next":[{"to":-2,"text":""}]},{"key":-9,"text":"Red: nice color!","type":"MESSAGE","next":[{"to":-2,"text":""}]},{"key":-10,"text":"I couldn't figure it out so you can play with QNAMaker","type":"MESSAGE","next":[{"to":-11,"text":""}]},{"key":-11,"text":"Chitchat with me (EXIT to leave)","type":"QNA","next":[{"to":-12,"text":""}],"parVar":"QNA","parURL":"https://lambotengineqna.azurewebsites.net/qnamaker","parKey":"b8fb0e89-daeb-46f0-9a23-3762df2080a3","parPar":"b99d3036-03b3-41c0-98dd-6c90a7aee95c"},{"key":-12,"text":"is EXIT?","type":"IF","next":[{"to":-2,"text":"true"},{"to":-11,"text":"false"}],"parCon":"\"{QNA}\"==\"EXIT\""}],"diagram":{"class":"go.GraphLinksModel","modelData":{"position":"-52.82465273057403 -95.33563820417538"},"nodeDataArray":[{"text":"I am the Echo Bot Sample. \nHint: read the flow on the right and try the different paths","figure":"Circle","fill":"#00AD5F","type":"START","key":"1","loc":"190 50","size":"216 111"},{"text":"Please shout something","type":"INPUT","key":-2,"loc":"140 160","parVar":"SHOUT","parTyp":"","parCkv":"Yes"},{"text":"You said: {SHOUT}","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-5,"loc":"140 260"},{"text":"Check if you are saying ECHO","figure":"Diamond","fill":"lightskyblue","type":"IF","key":-4,"loc":"140 380","size":"210 129","parCon":"\"{SHOUT}\"==\"ECHO\""},{"text":"ECHO... ECHO... ECHO...","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-6,"loc":"390 470"},{"text":"Choose a color using natural language (LUIS)","figure":"RoundedRectangle","fill":"lightgreen","type":"LUIS","key":-7,"loc":"390 370","parVar":"LUISVAR","parURL":"https://westus.api.cognitive.microsoft.com","parKey":"c6e72331a84c4d23a590c503c360c35b","parLMI":"0.5","parPar":"914db407-b188-442c-8306-c9cb781faadc","parCkv":"Yes"},{"text":"Blue: nice color!","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-8,"loc":"300 210"},{"text":"Red: nice color!","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-9,"loc":"470 210"},{"text":"I couldn't figure it out so you can play with QNAMaker","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-10,"loc":"600 350"},{"text":"Chitchat with me (EXIT to leave)","figure":"RoundedRectangle","fill":"#77CC77","type":"QNA","key":-11,"loc":"630 250","parVar":"QNA","parURL":"https://lambotengineqna.azurewebsites.net/qnamaker","parKey":"b8fb0e89-daeb-46f0-9a23-3762df2080a3","parPar":"b99d3036-03b3-41c0-98dd-6c90a7aee95c"},{"text":"is EXIT?","figure":"Diamond","fill":"lightskyblue","type":"IF","key":-12,"loc":"620 160","parCon":"\"{QNA}\"==\"EXIT\""}],"linkDataArray":[{"from":"1","to":-2,"points":[137.5,105.50000000000001,137.5,115.50000000000001,137.5,125,140,125,140,134.5,140,144.5]},{"from":-2,"to":-5,"points":[140,175.5,140,185.5,140,208.61928812542303,140,208.61928812542303,140,231.73857625084605,140,241.73857625084605]},{"from":-5,"to":-4,"points":[140,278.26142374915394,140,288.26142374915394,140,296.88071187457706,140,296.88071187457706,140,305.5000000000001,140,315.5000000000001]},{"from":-4,"to":-6,"points":[245,380,255,380,276.45928827801094,380,276.45928827801094,470.00000000000005,297.91857655602183,470.00000000000005,307.91857655602183,470.00000000000005],"text":"true"},{"from":-6,"to":-7,"points":[390,451.7385762508461,390,441.7385762508461,390,423.25,390,423.25,390,404.76142374915394,390,394.76142374915394]},{"from":-4,"to":-2,"points":[35,380.0000000000001,25,380.0000000000001,25,160,38.50250244140625,160,52.0050048828125,160,62.0050048828125,160],"text":"false"},{"from":-7,"to":-8,"points":[390,345.238576250846,390,335.238576250846,390,286.75,300,286.75,300,238.26142374915395,300,228.26142374915395],"text":"blue_intent"},{"from":-7,"to":-9,"points":[390,345.238576250846,390,335.238576250846,390,286.75,470,286.75,470,238.26142374915395,470,228.26142374915395],"text":"red_intent"},{"from":-8,"to":-2,"points":[241.24357731896126,210,231.24357731896126,210,229.61928621807436,210,229.61928621807436,160,227.9949951171875,160,217.9949951171875,160]},{"from":-9,"to":-2,"points":[412.90857823448863,210,402.90857823448863,210,402.90857823448863,210,402.90857823448863,160,227.9949951171875,160,217.9949951171875,160]},{"from":-7,"to":-10,"points":[469.08642069739613,370,479.08642069739613,370,493.7949981689453,370,493.7949981689453,350,508.50357564049443,350,518.5035756404944,350],"text":"None"},{"from":-10,"to":-11,"points":[600,318.73857625084605,600,308.73857625084605,600,296.75,630,296.75,630,284.76142374915394,630,274.76142374915394]},{"from":-11,"to":-12,"points":[630,225.23857625084602,630,215.23857625084602,630,207.619288125423,620,207.619288125423,620,200,620,190]},{"from":-12,"to":-2,"points":[555.6800003051758,160,545.6800003051758,160,386.83749771118164,160,386.83749771118164,160,227.9949951171875,160,217.9949951171875,160],"text":"true"},{"from":-12,"to":-11,"points":[684.3199996948242,160,694.3199996948242,160,724.0814234439781,160,724.0814234439781,205,724.0814234439781,250,714.0814234439781,250],"text":"false"}]}};
-    var model={"flow":[{"key":"1","text":"# I am the conversation designer demo","type":"START","next":[{"to":-14,"text":""}]},{"key":-2,"text":"Please shout something. (Exit to leave)","type":"INPUT","next":[{"to":-5,"text":""}],"parVar":"SHOUT","parTyp":"","parCkv":"Yes"},{"key":-5,"text":"You said: {SHOUT}","type":"MESSAGE","next":[{"to":-4,"text":""}]},{"key":-4,"text":"Check if user is saying Exit","type":"IF","next":[{"to":-3,"text":"true"},{"to":-2,"text":"false"}],"parCon":"\"{SHOUT}\".toLowerCase()==\"exit\""},{"key":-7,"text":"Choose a color using natural language (LUIS)","type":"LUIS","next":[{"to":-8,"text":"blue_intent"},{"to":-9,"text":"red_intent"},{"to":-13,"text":"None"}],"parVar":"LUISVAR","parURL":"https://westus.api.cognitive.microsoft.com","parKey":"c6e72331a84c4d23a590c503c360c35b","parLMI":"0.5","parPar":"914db407-b188-442c-8306-c9cb781faadc","parCkv":"Yes"},{"key":-8,"text":"Blue: nice color!","type":"MESSAGE","next":[{"to":-3,"text":""}]},{"key":-9,"text":"Red: nice color!","type":"MESSAGE","next":[{"to":-3,"text":""}]},{"key":-11,"text":"Chitchat with me (EXIT to leave)","type":"QNA","next":[{"to":-12,"text":""}],"parVar":"QNA","parURL":"https://lambotengineqna.azurewebsites.net/qnamaker","parKey":"b8fb0e89-daeb-46f0-9a23-3762df2080a3","parPar":"b99d3036-03b3-41c0-98dd-6c90a7aee95c"},{"key":-12,"text":"is EXIT?","type":"IF","next":[{"to":-11,"text":"false"},{"to":-3,"text":"true"}],"parCon":"\"{QNA}\".toUpperCase()==\"EXIT\""},{"key":-3,"text":"What do you want to try?","type":"CHOICE","next":[{"to":-2,"text":"Echo"},{"to":-7,"text":"LUIS"},{"to":-11,"text":"QnA"}]},{"key":-13,"text":"No intent","type":"MESSAGE","next":[{"to":-7,"text":""}]},{"key":-14,"text":"## Read the graphic flow and watch the synchronization between the flow and the chat","type":"MESSAGE","next":[{"to":-3,"text":""}]}],"diagram":{"class":"go.GraphLinksModel","modelData":{"position":"-129.9185765560219 -126.28021240234375"},"nodeDataArray":[{"text":"# I am the conversation designer demo","figure":"Circle","fill":"#00AD5F","type":"START","key":"1","loc":"-29.5 -56","size":"137 119"},{"text":"Please shout something. (Exit to leave)","type":"INPUT","key":-2,"loc":"140 160","parVar":"SHOUT","parTyp":"","parCkv":"Yes"},{"text":"You said: {SHOUT}","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-5,"loc":"140 260"},{"text":"Check if user is saying Exit","figure":"Diamond","fill":"lightskyblue","type":"IF","key":-4,"loc":"140 380","size":"142 136","parCon":"\"{SHOUT}\".toLowerCase()==\"exit\""},{"text":"Choose a color using natural language (LUIS)","figure":"RoundedRectangle","fill":"lightgreen","type":"LUIS","key":-7,"loc":"400 150","parVar":"LUISVAR","parURL":"https://westus.api.cognitive.microsoft.com","parKey":"c6e72331a84c4d23a590c503c360c35b","parLMI":"0.5","parPar":"914db407-b188-442c-8306-c9cb781faadc","parCkv":"Yes"},{"text":"Blue: nice color!","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-8,"loc":"330 290"},{"text":"Red: nice color!","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-9,"loc":"470 290"},{"text":"Chitchat with me (EXIT to leave)","figure":"RoundedRectangle","fill":"#77CC77","type":"QNA","key":-11,"loc":"650 150","parVar":"QNA","parURL":"https://lambotengineqna.azurewebsites.net/qnamaker","parKey":"b8fb0e89-daeb-46f0-9a23-3762df2080a3","parPar":"b99d3036-03b3-41c0-98dd-6c90a7aee95c"},{"text":"is EXIT?","figure":"Diamond","fill":"lightskyblue","type":"IF","key":-12,"loc":"650 250","parCon":"\"{QNA}\".toUpperCase()==\"EXIT\""},{"text":"What do you want to try?","figure":"RoundedRectangle","fill":"#eeee00","type":"CHOICE","key":-3,"loc":"140 90"},{"text":"No intent","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-13,"loc":"410 360"},{"text":"## Read the graphic flow and watch the synchronization between the flow and the chat","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-14,"loc":"140 0"}],"linkDataArray":[{"from":"1","to":-14,"points":[21,-56,31,-56,140,-56,140,-51.88071187457699,140,-47.76142374915397,140,-37.76142374915397]},{"from":-2,"to":-5,"points":[140,182.00000000000003,140,192.00000000000003,140,211.86928812542303,140,211.86928812542303,140,231.73857625084602,140,241.73857625084602]},{"from":-5,"to":-4,"points":[140,278.26142374915394,140,288.26142374915394,140,295.13071187457694,140,295.13071187457694,140,302,140,312]},{"from":-4,"to":-3,"points":[69,380,59,380,46.58857472496713,380,46.58857472496713,235,46.58857472496713,90,56.58857472496713,90],"text":"true"},{"from":-4,"to":-2,"points":[211,380,221,380,229.65999603271484,380,229.65999603271484,270,229.65999603271484,160,219.65999603271484,160],"text":"false"},{"from":-7,"to":-8,"points":[399.99999999999983,174.76142374915406,399.99999999999983,184.76142374915406,399.99999999999983,223.25000000000006,329.99999999999994,223.25000000000006,329.99999999999994,261.73857625084605,329.99999999999994,271.73857625084605],"text":"blue_intent"},{"from":-7,"to":-9,"points":[399.99999999999983,174.76142374915406,399.99999999999983,184.76142374915406,399.99999999999983,223.25000000000006,469.99999999999994,223.25000000000006,469.99999999999994,261.73857625084605,469.99999999999994,271.73857625084605],"text":"red_intent"},{"from":-11,"to":-12,"points":[650.0000000000002,174.7614237491539,650.0000000000002,184.7614237491539,650.0000000000002,197.38071187457692,649.9999999999998,197.38071187457692,649.9999999999998,209.99999999999994,649.9999999999998,219.99999999999994]},{"from":-12,"to":-11,"points":[585.6800003051755,249.99999999999994,575.6800003051755,249.99999999999994,555.918576556022,249.99999999999994,555.918576556022,199.99999999999994,555.918576556022,149.99999999999994,565.918576556022,149.99999999999994],"text":"false"},{"from":-3,"to":-2,"points":[140,108.26142374915396,140,118.26142374915396,140,123.130711874577,140,123.130711874577,140,128.00000000000003,140,138.00000000000003],"text":"Echo"},{"from":-3,"to":-7,"points":[223.41142527503285,90,233.41142527503285,90,272.16250228881824,90,272.16250228881824,150.00000000000008,310.9135793026037,150.00000000000008,320.9135793026037,150.00000000000008],"text":"LUIS"},{"from":-3,"to":-11,"points":[223.41142527503285,90,233.41142527503285,90,650.0000000000002,90,650.0000000000002,102.61928812542298,650.0000000000002,115.23857625084596,650.0000000000002,125.23857625084596],"text":"QnA"},{"from":-8,"to":-3,"points":[329.99999999999994,308.261423749154,329.99999999999994,318.261423749154,329.99999999999994,385.1000061035156,329.719970703125,385.1000061035156,329.719970703125,473.6700134277344,-8.1400146484375,473.6700134277344,-8.1400146484375,90,46.58857472496713,90,56.58857472496713,90]},{"from":-9,"to":-3,"points":[470,308.261423749154,470,318.261423749154,470,318.261423749154,470.429931640625,318.261423749154,470.429931640625,495.5299987792969,-53.860015869140625,495.5299987792969,-53.860015869140625,90,46.58857472496713,90,56.58857472496713,90]},{"from":-7,"to":-13,"points":[399.99999999999983,174.76142374915406,399.99999999999983,184.76142374915406,399.99999999999983,188,399.99999999999983,188,399.99999999999983,316,410,316,410,331.73857625084605,410,341.73857625084605],"text":"None"},{"from":-13,"to":-7,"points":[410,378.261423749154,410,388.261423749154,410,388.261423749154,540,388.261423749154,540,150.00000000000008,489.08642069739596,150.00000000000008,479.08642069739596,150.00000000000008]},{"from":-12,"to":-3,"points":[650,280,650,290,650,562.6700134277344,-73,562.6700134277344,-73,560.5299987792969,-80.27999877929687,560.5299987792969,-80.27999877929687,90,46.58857472496713,90,56.58857472496713,90],"text":"true"},{"from":-14,"to":-3,"points":[140,37.761423749153984,140,47.761423749153984,140,54.75,140,54.75,140,61.73857625084602,140,71.73857625084602]}]}}
-
-    //LOAD MODEL FROM STORAGE
-    try {
-        if (typeof(Storage) !== "undefined") {
-            if (localStorage.cookiePreserve)
-            {
-                //console.log(localStorage.cookiePreserve)
-                if (localStorage.chkLUISDebug=="true")
-                    document.all("chkLUISDebug").checked=true;
-                else
-                    document.all("chkLUISDebug").checked=false;
-
-                if (localStorage.cookiePreserve=="true")
-                    document.all("cookiePreserve").checked=true;
-                else
-                    document.all("cookiePreserve").checked=false;
+        function toggleProps(element){
+            if ($(element).hasClass("panel")){
+                $(element).removeClass("panel").addClass("bigpanel");
             }
-            if (document.all("cookiePreserve").checked){
-                var textFromFileLoaded = localStorage.getItem("flow");;
-                document.getElementById("mySavedModel").value = textFromFileLoaded;
-
-                model=JSON.parse(textFromFileLoaded);
+            else
+            {
+                $(element).removeClass("bigpanel").addClass("panel");
             }
         }
-    } catch (error) {
-        
-    }
-    //LOAD INITIAL BOT
-    myDiagram.model = go.Model.fromJson(model.diagram);
-    LoadAndSave.loadDiagramProperties();
-    Bot.userData={};
-    myDiagram.select(myDiagram.findNodeForKey("1"));
-    menu.PlayStep();
+        var DirectLineEmulator;
+        var scenario;
+        window.onload = async function () {
+            const user = {
+                id: 'Luis',
+                name: 'Luis'
+            };
+            const bot = {
+                id: 'botid',
+                name: 'botname'
+            };
+            const styleOptions = {
+                bubbleBackground: 'rgba(0, 0, 255, .1)',
+                bubbleFromUserBackground: 'rgba(0, 255, 0, .1)',
+                botAvatarInitials: 'Bot',
+                userAvatarInitials: 'User',
+                showSpokenText: true,
+            };
 
-    scenario={
-    Palette:[  
-        { text: "Start", figure: "Circle", fill: "#00AD5F", type:"START", key:"1" },
-        { text: "Input", type:"INPUT" },
-        { text: "Choice", figure: "RoundedRectangle", fill: "#eeee00", type:"CHOICE" },
-        { text: "???", figure: "Diamond", fill: "lightskyblue", type:"IF" },
-        { text: "Message", figure: "Rectangle", fill: "burlywood", type:"MESSAGE" },
-        { text: "LUIS", figure: "Rectangle", fill: "lightgreen", type:"LUIS" },
-        { text: "QNA", figure: "Rectangle", fill: "#77CC77", type:"QNA" },
-        { text: "Card", type:"CARD",fill: "lightyellow" },
-        { text: "API", figure: "Rectangle", fill: "#FF7777", type:"API" },
-        { text: "Dialog", type:"DIALOG", figure: "Rectangle", fill: "#FFdddd" },
-        { text: "Reset Var", type:"RESETVAR", figure: "Rectangle", fill: "#FF7777" }
-    ],
-    Fields:[
-        { type:"API", Fields:[{name:"parVar"},{name:"parAPI"},{name:"parPar"},{name:"parAPO"}] },
-        { type:"CARD",Fields:[{name:"parVar"},{name:"parCar"},{name:"parCrd"}] },
-        { type:"CHOICE", Fields:[{name:"parVar"}] },
-        { type:"DIALOG", Fields:[{name:"parAPI", title:"Dialog Name"}] },
-        { type:"IF", Fields:[{name:"parCon"}] },
-        { type:"INPUT", Fields:[{name:"parVar"},{name:"parTyp"},{name:"parCkv"}] },
-        { type:"LUIS", Fields:[{name:"parVar"},
-                {name:"parURL", default:"https://westus.api.cognitive.microsoft.com/"},
-                {name:"parKey", default:"authoringkey", title:'Authoring Key'},
-                {name:"parPar",default:"guid", title:'Appliaction Id'},
-                {name:"parLMI", default:"0.5"},
-                {name:"parCkv"}] },
-        { type:"MESSAGE", Fields:[] },
-        { type:"QNA", Fields:[{name:"parVar"},
-                {name:"parURL", default:"https://yourdeployment.azurewebsites.net/qnamaker"},
-                {name:"parKey", title:"EndpointKey",default:"guid"},
-                {name:"parPar", title:"Knowledgebase",default:"guid"},
-                ] },
-        { type:"RESETVAR", Fields:[{name:"parVar", title:"List of variables to erase separated by comma"}] },
-        { type:"START", Fields:[] }
-    ]
-}
-    myPalette.model=new go.GraphLinksModel(scenario.Palette);
+            var webSpeechPonyfillFactory = await window.WebChat.createCognitiveServicesSpeechServicesPonyfillFactory(
+                {
+                    region: 'westeurope',
+                    subscriptionKey: '9759ebf6852047cfa596622a7089261e'
+                });
 
-    // $.get("./scenario/default.scenario",function(data){
-    //     myPalette.model=new go.GraphLinksModel(data.Palette)
-    // })
 
-}        
-</script>
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-135656500-1"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'UA-135656500-1');
-</script>
+            window.WebChat.renderWebChat({
+                directLine: window.WebChat.createDirectLine({ token: '' }),
+                bot: bot,
+                user: user,
+                styleOptions,
+                webSpeechPonyfillFactory
+            }, document.getElementById('botWC'));
+
+            document.querySelector('#botWC > *').focus();
+
+
+            DirectLineEmulator = {
+                emptyActivity: {
+                    "activities": [],
+                    "watermark": "0"
+                },
+                userActivity: function (activity) {
+                    //Every time the user sends an activity:
+                    //console.log(activity) 
+                    Bot.receiveMessage(activity);
+                },
+                getActivity: function (activity) {
+                    //The bot polls this function every 1000ms, change activity to the message you want to display
+                    //console.log("ACTIVITY SENT")
+                    return this.emptyActivity;
+                }
+            }
+            goDiagram();
+            $('#fileToLoad').change(menu.handleFileSelect);
+            $('#fileScenarioToLoad').change(menu.handleFileScenarioSelect);
+
+            //OLD DEMO
+            //var model={"flow":[{"key":"1","text":"I am the Echo Bot Sample. \nHint: read the flow on the right and try the different paths","type":"START","next":[{"to":-2,"text":""}]},{"key":-2,"text":"Please shout something","type":"INPUT","next":[{"to":-5,"text":""}],"parVar":"SHOUT","parTyp":"","parCkv":"Yes"},{"key":-5,"text":"You said: {SHOUT}","type":"MESSAGE","next":[{"to":-4,"text":""}]},{"key":-4,"text":"Check if you are saying ECHO","type":"IF","next":[{"to":-6,"text":"true"},{"to":-2,"text":"false"}],"parCon":"\"{SHOUT}\"==\"ECHO\""},{"key":-6,"text":"ECHO... ECHO... ECHO...","type":"MESSAGE","next":[{"to":-7,"text":""}]},{"key":-7,"text":"Choose a color using natural language (LUIS)","type":"LUIS","next":[{"to":-8,"text":"blue_intent"},{"to":-9,"text":"red_intent"},{"to":-10,"text":"None"}],"parVar":"LUISVAR","parURL":"https://westus.api.cognitive.microsoft.com","parKey":"c6e72331a84c4d23a590c503c360c35b","parLMI":"0.5","parPar":"914db407-b188-442c-8306-c9cb781faadc","parCkv":"Yes"},{"key":-8,"text":"Blue: nice color!","type":"MESSAGE","next":[{"to":-2,"text":""}]},{"key":-9,"text":"Red: nice color!","type":"MESSAGE","next":[{"to":-2,"text":""}]},{"key":-10,"text":"I couldn't figure it out so you can play with QNAMaker","type":"MESSAGE","next":[{"to":-11,"text":""}]},{"key":-11,"text":"Chitchat with me (EXIT to leave)","type":"QNA","next":[{"to":-12,"text":""}],"parVar":"QNA","parURL":"https://lambotengineqna.azurewebsites.net/qnamaker","parKey":"b8fb0e89-daeb-46f0-9a23-3762df2080a3","parPar":"b99d3036-03b3-41c0-98dd-6c90a7aee95c"},{"key":-12,"text":"is EXIT?","type":"IF","next":[{"to":-2,"text":"true"},{"to":-11,"text":"false"}],"parCon":"\"{QNA}\"==\"EXIT\""}],"diagram":{"class":"go.GraphLinksModel","modelData":{"position":"-52.82465273057403 -95.33563820417538"},"nodeDataArray":[{"text":"I am the Echo Bot Sample. \nHint: read the flow on the right and try the different paths","figure":"Circle","fill":"#00AD5F","type":"START","key":"1","loc":"190 50","size":"216 111"},{"text":"Please shout something","type":"INPUT","key":-2,"loc":"140 160","parVar":"SHOUT","parTyp":"","parCkv":"Yes"},{"text":"You said: {SHOUT}","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-5,"loc":"140 260"},{"text":"Check if you are saying ECHO","figure":"Diamond","fill":"lightskyblue","type":"IF","key":-4,"loc":"140 380","size":"210 129","parCon":"\"{SHOUT}\"==\"ECHO\""},{"text":"ECHO... ECHO... ECHO...","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-6,"loc":"390 470"},{"text":"Choose a color using natural language (LUIS)","figure":"RoundedRectangle","fill":"lightgreen","type":"LUIS","key":-7,"loc":"390 370","parVar":"LUISVAR","parURL":"https://westus.api.cognitive.microsoft.com","parKey":"c6e72331a84c4d23a590c503c360c35b","parLMI":"0.5","parPar":"914db407-b188-442c-8306-c9cb781faadc","parCkv":"Yes"},{"text":"Blue: nice color!","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-8,"loc":"300 210"},{"text":"Red: nice color!","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-9,"loc":"470 210"},{"text":"I couldn't figure it out so you can play with QNAMaker","figure":"RoundedRectangle","fill":"lightyellow","type":"MESSAGE","key":-10,"loc":"600 350"},{"text":"Chitchat with me (EXIT to leave)","figure":"RoundedRectangle","fill":"#77CC77","type":"QNA","key":-11,"loc":"630 250","parVar":"QNA","parURL":"https://lambotengineqna.azurewebsites.net/qnamaker","parKey":"b8fb0e89-daeb-46f0-9a23-3762df2080a3","parPar":"b99d3036-03b3-41c0-98dd-6c90a7aee95c"},{"text":"is EXIT?","figure":"Diamond","fill":"lightskyblue","type":"IF","key":-12,"loc":"620 160","parCon":"\"{QNA}\"==\"EXIT\""}],"linkDataArray":[{"from":"1","to":-2,"points":[137.5,105.50000000000001,137.5,115.50000000000001,137.5,125,140,125,140,134.5,140,144.5]},{"from":-2,"to":-5,"points":[140,175.5,140,185.5,140,208.61928812542303,140,208.61928812542303,140,231.73857625084605,140,241.73857625084605]},{"from":-5,"to":-4,"points":[140,278.26142374915394,140,288.26142374915394,140,296.88071187457706,140,296.88071187457706,140,305.5000000000001,140,315.5000000000001]},{"from":-4,"to":-6,"points":[245,380,255,380,276.45928827801094,380,276.45928827801094,470.00000000000005,297.91857655602183,470.00000000000005,307.91857655602183,470.00000000000005],"text":"true"},{"from":-6,"to":-7,"points":[390,451.7385762508461,390,441.7385762508461,390,423.25,390,423.25,390,404.76142374915394,390,394.76142374915394]},{"from":-4,"to":-2,"points":[35,380.0000000000001,25,380.0000000000001,25,160,38.50250244140625,160,52.0050048828125,160,62.0050048828125,160],"text":"false"},{"from":-7,"to":-8,"points":[390,345.238576250846,390,335.238576250846,390,286.75,300,286.75,300,238.26142374915395,300,228.26142374915395],"text":"blue_intent"},{"from":-7,"to":-9,"points":[390,345.238576250846,390,335.238576250846,390,286.75,470,286.75,470,238.26142374915395,470,228.26142374915395],"text":"red_intent"},{"from":-8,"to":-2,"points":[241.24357731896126,210,231.24357731896126,210,229.61928621807436,210,229.61928621807436,160,227.9949951171875,160,217.9949951171875,160]},{"from":-9,"to":-2,"points":[412.90857823448863,210,402.90857823448863,210,402.90857823448863,210,402.90857823448863,160,227.9949951171875,160,217.9949951171875,160]},{"from":-7,"to":-10,"points":[469.08642069739613,370,479.08642069739613,370,493.7949981689453,370,493.7949981689453,350,508.50357564049443,350,518.5035756404944,350],"text":"None"},{"from":-10,"to":-11,"points":[600,318.73857625084605,600,308.73857625084605,600,296.75,630,296.75,630,284.76142374915394,630,274.76142374915394]},{"from":-11,"to":-12,"points":[630,225.23857625084602,630,215.23857625084602,630,207.619288125423,620,207.619288125423,620,200,620,190]},{"from":-12,"to":-2,"points":[555.6800003051758,160,545.6800003051758,160,386.83749771118164,160,386.83749771118164,160,227.9949951171875,160,217.9949951171875,160],"text":"true"},{"from":-12,"to":-11,"points":[684.3199996948242,160,694.3199996948242,160,724.0814234439781,160,724.0814234439781,205,724.0814234439781,250,714.0814234439781,250],"text":"false"}]}};
+            var model = { "flow": [{ "key": "1", "text": "# I am the conversation designer demo", "type": "START", "next": [{ "to": -14, "text": "" }] }, { "key": -2, "text": "Please shout something. (Exit to leave)", "type": "INPUT", "next": [{ "to": -5, "text": "" }], "parVar": "SHOUT", "parTyp": "", "parCkv": "Yes" }, { "key": -5, "text": "You said: {SHOUT}", "type": "MESSAGE", "next": [{ "to": -4, "text": "" }] }, { "key": -4, "text": "Check if user is saying Exit", "type": "IF", "next": [{ "to": -3, "text": "true" }, { "to": -2, "text": "false" }], "parCon": "\"{SHOUT}\".toLowerCase()==\"exit\"" }, { "key": -7, "text": "Choose a color using natural language (LUIS)", "type": "LUIS", "next": [{ "to": -8, "text": "blue_intent" }, { "to": -9, "text": "red_intent" }, { "to": -13, "text": "None" }], "parVar": "LUISVAR", "parURL": "https://westus.api.cognitive.microsoft.com", "parKey": "c6e72331a84c4d23a590c503c360c35b", "parLMI": "0.5", "parPar": "914db407-b188-442c-8306-c9cb781faadc", "parCkv": "Yes" }, { "key": -8, "text": "Blue: nice color!", "type": "MESSAGE", "next": [{ "to": -3, "text": "" }] }, { "key": -9, "text": "Red: nice color!", "type": "MESSAGE", "next": [{ "to": -3, "text": "" }] }, { "key": -11, "text": "Chitchat with me (EXIT to leave)", "type": "QNA", "next": [{ "to": -12, "text": "" }], "parVar": "QNA", "parURL": "https://lambotengineqna.azurewebsites.net/qnamaker", "parKey": "b8fb0e89-daeb-46f0-9a23-3762df2080a3", "parPar": "b99d3036-03b3-41c0-98dd-6c90a7aee95c" }, { "key": -12, "text": "is EXIT?", "type": "IF", "next": [{ "to": -11, "text": "false" }, { "to": -3, "text": "true" }], "parCon": "\"{QNA}\".toUpperCase()==\"EXIT\"" }, { "key": -3, "text": "What do you want to try?", "type": "CHOICE", "next": [{ "to": -2, "text": "Echo" }, { "to": -7, "text": "LUIS" }, { "to": -11, "text": "QnA" }] }, { "key": -13, "text": "No intent", "type": "MESSAGE", "next": [{ "to": -7, "text": "" }] }, { "key": -14, "text": "## Read the graphic flow and watch the synchronization between the flow and the chat", "type": "MESSAGE", "next": [{ "to": -3, "text": "" }] }], "diagram": { "class": "go.GraphLinksModel", "modelData": { "position": "-129.9185765560219 -126.28021240234375" }, "nodeDataArray": [{ "text": "# I am the conversation designer demo", "figure": "Circle", "fill": "#00AD5F", "type": "START", "key": "1", "loc": "-29.5 -56", "size": "137 119" }, { "text": "Please shout something. (Exit to leave)", "type": "INPUT", "key": -2, "loc": "140 160", "parVar": "SHOUT", "parTyp": "", "parCkv": "Yes" }, { "text": "You said: {SHOUT}", "figure": "RoundedRectangle", "fill": "lightyellow", "type": "MESSAGE", "key": -5, "loc": "140 260" }, { "text": "Check if user is saying Exit", "figure": "Diamond", "fill": "lightskyblue", "type": "IF", "key": -4, "loc": "140 380", "size": "142 136", "parCon": "\"{SHOUT}\".toLowerCase()==\"exit\"" }, { "text": "Choose a color using natural language (LUIS)", "figure": "RoundedRectangle", "fill": "lightgreen", "type": "LUIS", "key": -7, "loc": "400 150", "parVar": "LUISVAR", "parURL": "https://westus.api.cognitive.microsoft.com", "parKey": "c6e72331a84c4d23a590c503c360c35b", "parLMI": "0.5", "parPar": "914db407-b188-442c-8306-c9cb781faadc", "parCkv": "Yes" }, { "text": "Blue: nice color!", "figure": "RoundedRectangle", "fill": "lightyellow", "type": "MESSAGE", "key": -8, "loc": "330 290" }, { "text": "Red: nice color!", "figure": "RoundedRectangle", "fill": "lightyellow", "type": "MESSAGE", "key": -9, "loc": "470 290" }, { "text": "Chitchat with me (EXIT to leave)", "figure": "RoundedRectangle", "fill": "#77CC77", "type": "QNA", "key": -11, "loc": "650 150", "parVar": "QNA", "parURL": "https://lambotengineqna.azurewebsites.net/qnamaker", "parKey": "b8fb0e89-daeb-46f0-9a23-3762df2080a3", "parPar": "b99d3036-03b3-41c0-98dd-6c90a7aee95c" }, { "text": "is EXIT?", "figure": "Diamond", "fill": "lightskyblue", "type": "IF", "key": -12, "loc": "650 250", "parCon": "\"{QNA}\".toUpperCase()==\"EXIT\"" }, { "text": "What do you want to try?", "figure": "RoundedRectangle", "fill": "#eeee00", "type": "CHOICE", "key": -3, "loc": "140 90" }, { "text": "No intent", "figure": "RoundedRectangle", "fill": "lightyellow", "type": "MESSAGE", "key": -13, "loc": "410 360" }, { "text": "## Read the graphic flow and watch the synchronization between the flow and the chat", "figure": "RoundedRectangle", "fill": "lightyellow", "type": "MESSAGE", "key": -14, "loc": "140 0" }], "linkDataArray": [{ "from": "1", "to": -14, "points": [21, -56, 31, -56, 140, -56, 140, -51.88071187457699, 140, -47.76142374915397, 140, -37.76142374915397] }, { "from": -2, "to": -5, "points": [140, 182.00000000000003, 140, 192.00000000000003, 140, 211.86928812542303, 140, 211.86928812542303, 140, 231.73857625084602, 140, 241.73857625084602] }, { "from": -5, "to": -4, "points": [140, 278.26142374915394, 140, 288.26142374915394, 140, 295.13071187457694, 140, 295.13071187457694, 140, 302, 140, 312] }, { "from": -4, "to": -3, "points": [69, 380, 59, 380, 46.58857472496713, 380, 46.58857472496713, 235, 46.58857472496713, 90, 56.58857472496713, 90], "text": "true" }, { "from": -4, "to": -2, "points": [211, 380, 221, 380, 229.65999603271484, 380, 229.65999603271484, 270, 229.65999603271484, 160, 219.65999603271484, 160], "text": "false" }, { "from": -7, "to": -8, "points": [399.99999999999983, 174.76142374915406, 399.99999999999983, 184.76142374915406, 399.99999999999983, 223.25000000000006, 329.99999999999994, 223.25000000000006, 329.99999999999994, 261.73857625084605, 329.99999999999994, 271.73857625084605], "text": "blue_intent" }, { "from": -7, "to": -9, "points": [399.99999999999983, 174.76142374915406, 399.99999999999983, 184.76142374915406, 399.99999999999983, 223.25000000000006, 469.99999999999994, 223.25000000000006, 469.99999999999994, 261.73857625084605, 469.99999999999994, 271.73857625084605], "text": "red_intent" }, { "from": -11, "to": -12, "points": [650.0000000000002, 174.7614237491539, 650.0000000000002, 184.7614237491539, 650.0000000000002, 197.38071187457692, 649.9999999999998, 197.38071187457692, 649.9999999999998, 209.99999999999994, 649.9999999999998, 219.99999999999994] }, { "from": -12, "to": -11, "points": [585.6800003051755, 249.99999999999994, 575.6800003051755, 249.99999999999994, 555.918576556022, 249.99999999999994, 555.918576556022, 199.99999999999994, 555.918576556022, 149.99999999999994, 565.918576556022, 149.99999999999994], "text": "false" }, { "from": -3, "to": -2, "points": [140, 108.26142374915396, 140, 118.26142374915396, 140, 123.130711874577, 140, 123.130711874577, 140, 128.00000000000003, 140, 138.00000000000003], "text": "Echo" }, { "from": -3, "to": -7, "points": [223.41142527503285, 90, 233.41142527503285, 90, 272.16250228881824, 90, 272.16250228881824, 150.00000000000008, 310.9135793026037, 150.00000000000008, 320.9135793026037, 150.00000000000008], "text": "LUIS" }, { "from": -3, "to": -11, "points": [223.41142527503285, 90, 233.41142527503285, 90, 650.0000000000002, 90, 650.0000000000002, 102.61928812542298, 650.0000000000002, 115.23857625084596, 650.0000000000002, 125.23857625084596], "text": "QnA" }, { "from": -8, "to": -3, "points": [329.99999999999994, 308.261423749154, 329.99999999999994, 318.261423749154, 329.99999999999994, 385.1000061035156, 329.719970703125, 385.1000061035156, 329.719970703125, 473.6700134277344, -8.1400146484375, 473.6700134277344, -8.1400146484375, 90, 46.58857472496713, 90, 56.58857472496713, 90] }, { "from": -9, "to": -3, "points": [470, 308.261423749154, 470, 318.261423749154, 470, 318.261423749154, 470.429931640625, 318.261423749154, 470.429931640625, 495.5299987792969, -53.860015869140625, 495.5299987792969, -53.860015869140625, 90, 46.58857472496713, 90, 56.58857472496713, 90] }, { "from": -7, "to": -13, "points": [399.99999999999983, 174.76142374915406, 399.99999999999983, 184.76142374915406, 399.99999999999983, 188, 399.99999999999983, 188, 399.99999999999983, 316, 410, 316, 410, 331.73857625084605, 410, 341.73857625084605], "text": "None" }, { "from": -13, "to": -7, "points": [410, 378.261423749154, 410, 388.261423749154, 410, 388.261423749154, 540, 388.261423749154, 540, 150.00000000000008, 489.08642069739596, 150.00000000000008, 479.08642069739596, 150.00000000000008] }, { "from": -12, "to": -3, "points": [650, 280, 650, 290, 650, 562.6700134277344, -73, 562.6700134277344, -73, 560.5299987792969, -80.27999877929687, 560.5299987792969, -80.27999877929687, 90, 46.58857472496713, 90, 56.58857472496713, 90], "text": "true" }, { "from": -14, "to": -3, "points": [140, 37.761423749153984, 140, 47.761423749153984, 140, 54.75, 140, 54.75, 140, 61.73857625084602, 140, 71.73857625084602] }] } }
+
+            //LOAD MODEL FROM STORAGE
+            try {
+                if (typeof (Storage) !== "undefined") {
+                    if (localStorage.cookiePreserve) {
+                        //console.log(localStorage.cookiePreserve)
+                        if (localStorage.chkLUISDebug == "true")
+                            document.all("chkLUISDebug").checked = true;
+                        else
+                            document.all("chkLUISDebug").checked = false;
+
+                        if (localStorage.cookiePreserve == "true")
+                            document.all("cookiePreserve").checked = true;
+                        else
+                            document.all("cookiePreserve").checked = false;
+                    }
+                    if (document.all("cookiePreserve").checked) {
+                        var textFromFileLoaded = localStorage.getItem("flow");;
+                        document.getElementById("mySavedModel").value = textFromFileLoaded;
+
+                        model = JSON.parse(textFromFileLoaded);
+                    }
+                }
+            } catch (error) {
+
+            }
+            //LOAD INITIAL BOT
+            myDiagram.model = go.Model.fromJson(model.diagram);
+            LoadAndSave.loadDiagramProperties();
+            Bot.userData = {};
+            myDiagram.select(myDiagram.findNodeForKey("1"));
+            menu.PlayStep();
+
+            scenario = {
+                Palette: [
+                    { text: "Start", figure: "Circle", fill: "#00AD5F", type: "START", key: "1" },
+                    { text: "Input", type: "INPUT" },
+                    { text: "Choice", figure: "RoundedRectangle", fill: "#eeee00", type: "CHOICE" },
+                    { text: "???", figure: "Diamond", fill: "lightskyblue", type: "IF" },
+                    { text: "Message", figure: "Rectangle", fill: "burlywood", type: "MESSAGE" },
+                    { text: "LUIS", figure: "Rectangle", fill: "lightgreen", type: "LUIS" },
+                    { text: "QNA", figure: "Rectangle", fill: "#77CC77", type: "QNA" },
+                    { text: "Card", type: "CARD", fill: "lightyellow" },
+                    { text: "API", figure: "Rectangle", fill: "#FF7777", type: "API" },
+                    { text: "Dialog", type: "DIALOG", figure: "Rectangle", fill: "#FFdddd" },
+                    { text: "Reset Var", type: "RESETVAR", figure: "Rectangle", fill: "#FF7777" },
+                    { text: "REST\nCall", figure: "Rectangle", fill: "#FF7777", type: "REST" },
+                ],
+                Fields: [
+                    {
+                        type: "API",
+                        Fields: [{ name: "parVar" }, { name: "parAPI" }, { name: "parPar" }, { name: "parAPO" }],
+                        waitForUserInput: "false"
+                    },
+                    {
+                        type: "CARD",
+                        Fields: [{ name: "parVar" }, { name: "parCar" }, { name: "parCrd" }],
+                        waitForUserInput: "true"
+                    },
+                    {
+                        type: "CHOICE",
+                        Fields: [{ name: "parVar" }],
+                        waitForUserInput: "true",
+                        needValidChoice: "true"
+                    },
+                    {
+                        type: "DIALOG",
+                        Fields: [{ name: "parAPI", title: "Dialog Name" }],
+                        waitForUserInput: "false",
+                        showMessage:"false"
+                    },
+                    {
+                        type: "IF", Fields: [{ name: "parCon" }],
+                        waitForUserInput: "false",
+                        showMessage:"false"
+                    },
+                    {
+                        type: "INPUT", Fields: [{ name: "parVar" }, { name: "parTyp" }, { name: "parCkv" }],
+                        waitForUserInput: "true"
+                    },
+                    {
+                        type: "LUIS", Fields: [{ name: "parVar" },
+                        { name: "parURL", default: "https://westus.api.cognitive.microsoft.com/" },
+                        { name: "parKey", default: "authoringkey", title: 'Authoring Key' },
+                        { name: "parPar", default: "guid", title: 'Appliaction Id' },
+                        { name: "parLMI", default: "0.5" },
+                        { name: "parCkv" }],
+                        waitForUserInput: "true",
+                        needValidChoice: "true"
+                    },
+                    {
+                        type: "MESSAGE", Fields: [],
+                        waitForUserInput: "false"
+                    },
+                    {
+                        type: "QNA", Fields: [{ name: "parVar" },
+                        { name: "parURL", default: "https://yourdeployment.azurewebsites.net/qnamaker" },
+                        { name: "parKey", title: "EndpointKey", default: "guid" },
+                        { name: "parPar", title: "Knowledgebase", default: "guid" },
+                        ],
+                        waitForUserInput: "true"
+                    },
+                    {
+                        type: "RESETVAR", Fields: [{ name: "parVar", title: "List of variables to erase separated by comma" }],
+                        waitForUserInput: "false",
+                        showMessage:"false"
+                    },
+                    {
+                        type: "START", Fields: [],
+                        waitForUserInput: "false"
+                    },
+                    {
+                        type: "REST", Fields: [{ name: "parVar" },
+                        { name: "parPar", title: "REST CALL", default: "POST http://url.com\nAUTHORIZATION: Basic XXX\n\n{data:''}" },
+                        { name: "parKey", title: "Response XPath", default: "//result" },
+                        { name: "parAPO", title: "Output" },  
+                        { name: "parCrd", title:"Card",default:'{"contentType":"application/vnd.microsoft.card.hero","content":{"title":"${title}","text":"${text}","images":[],"buttons":[{"type":"postBack","title":"button","value":"buttonvalue"}]}}' }
+                        ],
+                        waitForUserInput: "false",
+                        showMessage:"false"
+                    },
+                ]
+            }
+            myPalette.model = new go.GraphLinksModel(scenario.Palette);
+        }        
+    </script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-135656500-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'UA-135656500-1');
+    </script>
     <div id="Settings" class="modal">
         <input type="checkbox" id="cookiePreserve" onclick="menu.preserve()">Preserve actual design in cookie<br>
-        This option will store the current flow in your browser local storage. No need to load and save the model continuously until you arrive a final design. Nevertheless... Save Always, Save Often!
+        This option will store the current flow in your browser local storage. No need to load and save the model
+        continuously until you arrive a final design. Nevertheless... Save Always, Save Often!
         <br><br>
         <input type="checkbox" id="chkLUISDebug" onclick="menu.preserve()">Edit LUIS responses<br>
-        With this option checked everytime there is a LUIS call activity you will have the possibility to add your text to the intent or change the selected intent. This changes the LUIS model, you'll need to train and publish it again. NOTE: No option to add entities yet. Work in Progress!
+        With this option checked everytime there is a LUIS call activity you will have the possibility to add your text
+        to the intent or change the selected intent. This changes the LUIS model, you'll need to train and publish it
+        again. NOTE: No option to add entities yet. Work in Progress!
         <br><br>
         <button onclick="$('#fileScenarioToLoad').focus().click();$.modal.close();">Load Scenario</button><br>
-        Loading a scenario demonstrates how you can configure the designer to serve business users. Instead of having developers designing all the small components of a conversation, Business users can create flows with business activities. You'll find scenarios inside the "scenarios" folder.
+        Loading a scenario demonstrates how you can configure the designer to serve business users. Instead of having
+        developers designing all the small components of a conversation, Business users can create flows with business
+        activities. You'll find scenarios inside the "scenarios" folder.
     </div>
     <div id="DebugLUIS" class="modal">
         <div style="font-weight:bold">Query</div>
@@ -230,12 +289,13 @@ window.onload=async function()
         <div id="DebugLUISUnderstood"></div>
         <div style="font-weight:bold;margin-top:5px;">Top Intent</div>
         <div id="DebugLUISTopIntent"></div>
-        <input type=hidden id="DebugLUISTopIntentVal"/>
+        <input type=hidden id="DebugLUISTopIntentVal" />
         <div style="font-weight:bold;margin-top:5px;">
             <button onclick="$.modal.close();">Accept</button>
             <div id="divReassignIntent">
                 <select id=newIntent></select>
-                <button style="margin-left:20px;" onclick="LUISAddUtterance();$.modal.close();">Add utterance to intent</button>
+                <button style="margin-left:20px;" onclick="LUISAddUtterance();$.modal.close();">Add utterance to
+                    intent</button>
             </div>
         </div>
     </div>
