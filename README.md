@@ -57,7 +57,6 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
 - EXPORT TO Node missing features
     - API
     - DIALOG
-    - REST CALL
 - EXPORT TO C# missing features: 
     - card
     - API

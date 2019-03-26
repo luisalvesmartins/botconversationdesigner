@@ -14,6 +14,8 @@
 const { ComponentDialog, WaterfallDialog, TextPrompt, ChoicePrompt } = require('botbuilder-dialogs');
 const { MessageFactory, CardFactory } = require('botbuilder');
 const { LuisRecognizer, QnAMaker } = require('botbuilder-ai');
+var request=require('request-promise');
+var jsel=require('jsel');
 
 // Dialog IDs
 const MAIN_DIALOG = 'mainDialog';
@@ -138,6 +140,89 @@ async MAINSTEP(step){
     suggestActionsOptions(prompt,choices)
     {
         return MessageFactory.suggestedActions(choices,prompt);
+    }
+    async RESTCall(command){
+        var lines=command.split('\n');
+        lines[0]=lines[0].trim();
+        var p=lines[0].indexOf(' ');
+        var verb="GET";
+        var url=lines[0];
+        if (p>0)
+        {
+          verb=lines[0].substring(0,p);
+          url=lines[0].substring(p+1);
+        }
+        var header="";
+        var index;
+        for (index = 1; index < lines.length; index++) {
+          const element = lines[index].trim();
+          if (element=="")
+            break;
+          else{
+            p=element.indexOf(':');
+            if (p<=0)
+              return {error:"no header dev"}
+            if (header!="")        
+              header+=",";
+            header+="\"" + element.substring(0,p).trim() + "\":\"" + element.substring(p+1).trim() + "\"";
+          }
+        }
+        header="{" + header + "}";
+      
+        var data="";
+        for (index=index;index < lines.length; index++) {
+          data+=lines[index];
+        }
+
+        var r= {verb:verb, url:url, headers:JSON.parse(header), data:data};
+        return await request({
+            "method":r.verb, 
+            "uri": r.url,
+            "headers":r.headers,
+            "body":r.data,
+        }).then(
+            function(data){
+                return data;
+                }, 
+            function(data){
+            console.log("ERROR");
+            //console.log(data);
+            return data;
+        });
+    }
+    async RESTCallStep(req,key,card) {
+        var returnValue=await this.RESTCall(req);
+        var dom = jsel(JSON.parse(returnValue));
+             
+        //FILTER= a.parKey
+        var results=dom.selectAll(key);
+        var extension="";
+        for (let index = 0; index < results.length; index++) {
+            const element = results[index];
+    
+            var dom2 = jsel(element);
+    
+            //SEARCH a.parCrd for ${}
+            var crd=card;
+            var p=1;
+            while(p>0) {
+                p=crd.indexOf("${");
+                if (p>=0)
+                {
+                    var pd=crd.indexOf("}",p);
+                    var field=crd.substring(p+2,pd);
+        
+                    var text=dom2.select(field);
+        
+                    crd=crd.substring(0,p) + text + crd.substring(pd+1);
+                }
+            }
+    
+            if (extension!="")
+                extension+=","
+            extension+=crd;
+        }
+        return "[" + extension + "]";
     }
 }
 

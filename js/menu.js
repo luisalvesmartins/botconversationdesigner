@@ -131,6 +131,19 @@ var menu =
           output += `   ${CONTEXT_NEXT};\n`;
           movenext += `userProfile.step=${n};\n            break;\n`;
           break;
+        case "REST":
+          output += `   
+          console.log("REST");
+
+          var req=await this.ReplacePragmas(step,\`${element.parPar}\`);
+          var key=await this.ReplacePragmas(step,\`${element.parKey}\`);
+          var card=await this.ReplacePragmas(step,JSON.stringify(${element.parCrd}));
+          var attachments=await this.RESTCallStep(req,key,card);
+          await step.context.sendActivity( MessageFactory.carousel(JSON.parse(attachments)) );
+          ${CONTEXT_NEXT}`;
+          movenext += `userProfile.step=${n};\n            break;\n`;
+
+          break;
         case "CARD":
           switch (element.parCar) {
             case "adaptiveCard":
@@ -139,8 +152,9 @@ var menu =
             await ${SEND_ACTIVITY}({
               text: await this.ReplacePragmas(step,STRING_${element.newIndex}),
               attachments: [CardFactory.adaptiveCard(card)]
-                });\n`;
-              break;
+                });
+                ${CONTEXT_NEXT}`;
+                break;
 
             default:
               break;
