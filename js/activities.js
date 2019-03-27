@@ -123,8 +123,8 @@ function cardTemplate() {
       break;
   }
   document.all("parCrd").value = JSON.stringify(attachments);
-  console.log("ATT:" + parCar)
-  console.log(JSON.stringify(attachments))
+  // console.log("ATT:" + parCar)
+  // console.log(JSON.stringify(attachments))
   //document.all("parCrd").innerText=JSON.stringify(attachments);
 }
 
@@ -171,10 +171,10 @@ var ParameterList = [
   { name: "parAPO", default: "" }, //API Output
   { name: "parCrd", default: "" }, //Card Definition
   { name: "parCkv", default: "yes" }, //Check if variable exists
+  { name: "parTra", default: "no" }, //Translation
+  { name: "parTro", default: "no" }, //Translation
   { name: "parTx0", default: "" }, //Text 0
   { name: "parTx1", default: "" }, //Text 1
-  { name: "parTx2", default: "" }, //Text 2
-  { name: "parTx3", default: "" } //Text 3
 ];
 
 function GetFieldList(dataType) {
@@ -207,34 +207,14 @@ function DisplayProperties(data) {
     var field = Fields[f];
     sHTML += "<div id=t_" + field.name + ">";
     switch (field.name) {
-      case "parCrd":
-        sHTML += "Card Definition</div><TEXTAREA id=parCrd onkeyup='parSave()' rows=14 cols=21 style='width:100%'></TEXTAREA>"
+      case "parAPI":
+        sHTML += "API or URL</div><INPUT type=text id=parAPI onkeyup='parSave()' style='width:100%'>"
         break;
-      case "parVar":
-        sHTML += "VARIABLE</div><INPUT type=text id=parVar onkeyup='parSave()' style='width:100%'>"
-        break;
-      case "parTyp":
-        sHTML += "TYPE OF INPUT</div><INPUT type=text id=parTyp onkeyup='parSave()' style='width:100%'>"
-        break;
-      case "parURL":
-        sHTML += "URL</div><TEXTAREA id=parURL onkeyup='parSave()' rows=6 cols=21 style='width:100%'></TEXTAREA>"
-        break;
-      case "parKey":
-        sHTML += "Key</div><INPUT type=text id=parKey onkeyup='parSave()' style='width:100%'>"
-        break;
-      case "parLMI":
-        sHTML += "Minimum Score</div><INPUT type=text id=parLMI onkeyup='parSave()' style='width:100%'>"
-        break;
-      case "parPar":
-        sHTML += "Parameters</div><TEXTAREA id=parPar onkeyup='parSave()' rows=6 cols=21 style='width:100%'></TEXTAREA>"
-        break;
-      case "parCon":
-        sHTML += "Condition</div><TEXTAREA id=parCon onkeyup='parSave()' rows=6 cols=21 style='width:100%'></TEXTAREA>"
-        break;
-      case "parCkv":
-        sHTML += "Prompt even if variable already defined</div><SELECT id=parCkv onkeyup='parSave()' onchange='parSave()'>" +
-          "<option>Yes</option>" +
-          "<option>No</option>" +
+      case "parAPO":
+        sHTML += "API Output</div><SELECT id=parAPO onkeyup='parSave()' onchange='parSave()'>" +
+          "<option>None</option>" +
+          "<option>Variable</option>" +
+          "<option>MessageContent</option>" +
           "</select>";
         break;
       case "parCar":
@@ -250,27 +230,53 @@ function DisplayProperties(data) {
           "<option>videoCard</option>" +
           "</select>";
         break;
-      case "parAPI":
-        sHTML += "API or URL</div><INPUT type=text id=parAPI onkeyup='parSave()' style='width:100%'>"
-        break;
-      case "parAPO":
-        sHTML += "API Output</div><SELECT id=parAPO onkeyup='parSave()' onchange='parSave()'>" +
-          "<option>None</option>" +
-          "<option>Variable</option>" +
-          "<option>MessageContent</option>" +
+      case "parCkv":
+        sHTML += "Prompt even if variable already defined</div><SELECT id=parCkv onkeyup='parSave()' onchange='parSave()'>" +
+          "<option>Yes</option>" +
+          "<option>No</option>" +
           "</select>";
+        break;
+      case "parCon":
+        sHTML += "Condition</div><TEXTAREA id=parCon onkeyup='parSave()' rows=6 cols=21 style='width:100%'></TEXTAREA>"
+        break;
+      case "parCrd":
+        sHTML += "Card Definition</div><TEXTAREA id=parCrd onkeyup='parSave()' rows=14 cols=21 style='width:100%'></TEXTAREA>"
+        break;
+      case "parKey":
+        sHTML += "Key</div><INPUT type=text id=parKey onkeyup='parSave()' style='width:100%'>"
+        break;
+      case "parLMI":
+        sHTML += "Minimum Score</div><INPUT type=text id=parLMI onkeyup='parSave()' style='width:100%'>"
+        break;
+      case "parPar":
+        sHTML += "Parameters</div><TEXTAREA id=parPar onkeyup='parSave()' rows=6 cols=21 style='width:100%'></TEXTAREA>"
+        break;
+      case "parTyp":
+        sHTML += "TYPE OF INPUT</div><INPUT type=text id=parTyp onkeyup='parSave()' style='width:100%'>"
+        break;
+      case "parURL":
+        sHTML += "URL</div><TEXTAREA id=parURL onkeyup='parSave()' rows=6 cols=21 style='width:100%'></TEXTAREA>"
+        break;
+      case "parVar":
+        sHTML += "VARIABLE</div><INPUT type=text id=parVar onkeyup='parSave()' style='width:100%'>"
+        break;
+      case "parTra":
+        sHTML += "Translate Input</div><SELECT id=parTra onkeyup='parSave()' onchange='parSave()'>" +
+          "<option>No</option>" +
+          "<option>Yes</option>" +
+          "</select>";
+        break;
+      case "parTro":
+        sHTML += "Translate Output</div><SELECT id=parTro onkeyup='parSave()' onchange='parSave()'>" +
+        "<option>No</option>" +
+        "<option>Yes</option>" +
+        "</select>";
         break;
       case "parTx0":
         sHTML += "VARIABLE</div><INPUT type=text id=parTx0 onkeyup='parSave()' style='width:100%'>"
         break;
       case "parTx1":
         sHTML += "VARIABLE</div><INPUT type=text id=parTx1 onkeyup='parSave()' style='width:100%'>"
-        break;
-      case "parTx2":
-        sHTML += "VARIABLE</div><INPUT type=text id=parTx2 onkeyup='parSave()' style='width:100%'>"
-        break;
-      case "parTx3":
-        sHTML += "VARIABLE</div><INPUT type=text id=parTx3 onkeyup='parSave()' style='width:100%'>"
         break;
       default:
         break;
@@ -319,7 +325,7 @@ var LoadAndSave = {
         parVar: gO.parVar, parURL: gO.parURL, parKey: gO.parKey, parTyp: gO.parTyp, parLMI: gO.parLMI,
         parCon: gO.parCon, parPar: gO.parPar, parCar: gO.parCar, parAPI: gO.parAPI, parAPO: gO.parAPO,
         parCrd: gO.parCrd, parCkv: gO.parCkv, 
-        parTx0: gO.parTx0, parTx1:gO.parTx1, parTx2: gO.parTx2, parTx3:gO.parTx3
+        parTx0: gO.parTx0, parTx1:gO.parTx1, parTro: gO.parTro, parTra:gO.parTra
       })
     }
     return botObject;
@@ -348,6 +354,7 @@ var Bot = {
   messageID: 0,
   lastActivity: null,
   key: 0,
+  translator:null,
   sendMessage: function (text, extension) {
     Bot.messageID++;
     var message = {
@@ -378,8 +385,6 @@ var Bot = {
   userData: {},
   receiveMessage: function (activity) {
     if (activity != Bot.lastActivity) {
-      // console.log("USER ACTIVITY:")
-      // console.log(activity);
       $("#userdatavalue").html(JSON.stringify(Bot.userData));
       if (activity.text.toUpperCase().startsWith("BOT:")) {
         var message = activity.text.substr(4);
@@ -404,180 +409,212 @@ var Bot = {
         }
       }
       else {
-        //MOVE NEXT
-        if (myDiagram.selection.count > 0) {
-          var flow = LoadAndSave.prepareSave().flow;
-          var condition = false;
-          var key = myDiagram.selection.first().key;
-          var a = searchArray(flow, key, "key")
-
-          if (a.parVar) {
-            Bot.userData[a.parVar] = activity.text;
-          }
-
-          var topScoringIntent = "None";
-          if (a.type == "LUIS") {
-            //DO THE CALL
-            var LUISResult = undefined;
-            try {
-              var url = a.parURL + "/luis/v2.0/apps/" + a.parPar + "?subscription-key=" + a.parKey + "&q=" + activity.text;
-              var res = $.get({ url: url, async: false }).responseText;
-              LUISResult = JSON.parse(res);
-            } catch (error) {
-              alert("ERROR IN LUIS PARAMETERS");
-            }
-            if (LUISResult) {
-              topScoringIntent = LUISResult.topScoringIntent.intent;
-              if (LUISResult.sentimentAnalysis) {
-                Bot.userData[a.parVar + ".sentiment.label"] = LUISResult.sentimentAnalysis.label;
-                Bot.userData[a.parVar + ".sentiment.score"] = LUISResult.sentimentAnalysis.score;
-              }
-              LUISResult.entities.forEach(element => {
-                Bot.userData[a.parVar + "." + element.type] = element.entity;
-              });
-              //console.log(topScoringIntent);
-            }
-            if (document.all("chkLUISDebug").checked) {
-              LUISDebug(a, LUISResult);
-            }
-          }
-          if (a.type == "QNA") {
-            //DO THE CALL
-            var QNAResult = undefined;
-            try {
-              var url = a.parURL + "/knowledgebases/" + a.parPar + "/generateAnswer";
-              var headers = { "Authorization": "EndpointKey " + a.parKey, "Content-Type": "application/json" };
-              var res = $.post({
-                url: url,
-                headers: headers,
-                async: false,
-                data: "{\"question\":\"" + encodeURI(activity.text) + "\"}"
-              }).responseText;
-              QNAResult = JSON.parse(res);
-            } catch (error) {
-              alert("ERROR IN QNA PARAMETERS");
-            }
-            if (QNAResult) {
-              console.log(QNAResult);
-              topScoringIntent = QNAResult.answers[0].answer;
-            }
-          }
-
-          var messages = [];
-          do {
-            // console.log("TYPE:" + a.type);
-            // console.log("MESSAGES");
-            // console.log(JSON.stringify(messages));
-            condition = false;
-            var text = activity.text;
-            if (a.type == "IF") {
-              text = Bot.ReplacePragmas(a.parCon)
-              text = eval(text).toString();
-            }
-            //console.log("A.TYPE:" + a.type);
-            if (a.type == "LUIS") {
-              text = topScoringIntent;
-            }
-            if (a.type == "QNA") {
-              messages.push({ type: "MESSAGE", text: topScoringIntent });
-            }
-            if (a.type=="REST")
-            {
-              //REST= a
-              var post = Bot.ReplacePragmas(a.parPar);
-              var returnValue=RESTCall(post);
-              var dom = jsel(JSON.parse(returnValue));
-         
-              //FILTER= a.parKey
-              var results=dom.selectAll(a.parKey);
-              var extension="";
-              for (let index = 0; index < results.length; index++) {
-                  const element = results[index];
-
-                  var dom2 = jsel(element);
-
-                  //SEARCH a.parCrd for ${}
-                  var crd=a.parCrd;
-                  var p=1;
-                  while(p>0) {
-                    p=crd.indexOf("${");
-                    if (p>=0)
-                    {
-                      var pd=crd.indexOf("}",p);
-                      var field=crd.substring(p+2,pd);
-
-                      var text=dom2.select(field);
-  
-                      crd=crd.substring(0,p) + text + crd.substring(pd+1);
-                    }
-                  }
-  
-                  if (extension!="")
-                      extension+=","
-                  extension+=crd;
-              }
-              extension="[" + extension + "]";
-          
-              messages.push({ type: "REST", text: "", attachmentLayout:"carousel", extension:{ "attachments": JSON.parse(extension) } });
-            }
-  
-            var FieldDefinition=GetTypeDefinition(a.type)
-
-            var nxt = Bot.getNext(a.next, text);
-            //CHECK INVALID CHOICE
-            if (!nxt && FieldDefinition.needValidChoice=="true")
-              nxt=a.key;
-            if (nxt) {
-              var goto = searchArray(flow, nxt, "key")
-              var FieldDefinition=GetTypeDefinition(goto.type)
-              var bSendMessage = true;
-              if (FieldDefinition.showMessage=="false")
-                bSendMessage = false;
-              if (goto.type == "INPUT") {
-                // console.log("INPUT")
-                // console.log(goto.type)
-                if (goto.parCkv == "No" && Bot.userData[goto.parVar]) {
-                  bSendMessage = false;
-                  condition = true;
-                }
-              }
-              if (goto.type == "DIALOG") {
-                goto.text = "Transfer to Dialog " + goto.parAPI;
-                messages.push(goto);
-              }
-              if (goto.type == "RESETVAR") {
-                var a = goto.parVar.split(",");
-                for (let index = 0; index < a.length; index++) {
-                  const element = a[index];
-                  delete Bot.userData[element];
-                }
-              }
-
-              if (bSendMessage) {
-                messages.push(goto);
-              }
-
-              myDiagram.select(myDiagram.findNodeForKey(nxt));
-
-              var a = searchArray(flow, nxt, "key")
-              FieldDefinition=GetTypeDefinition(a.type)
-              //if (a.type == "MESSAGE" || a.type == "START" || a.type == "API" || a.type == "IF" || a.type == "RESETVAR" || a.type=="REST")
-              if (FieldDefinition.waitForUserInput!="true")
-                condition = true;
-            }
-            else {
-              messages.push({ type: "MESSAGE", text: "<end of flow>" });
-            }
-          } while (condition);
-          $("#userdatavalue").html(JSON.stringify(Bot.userData));
-          Bot.sendBotMessage(messages);
-        }
-        else {
-          Bot.sendMessage("Design flow and then interact with it");
-        }
+        Bot.processMessage(activity);
       }
       Bot.lastActivity = activity;
     }
+  },
+  processMessage(activity){
+    //MOVE NEXT
+    if (myDiagram.selection.count > 0) {
+      var flow = LoadAndSave.prepareSave().flow;
+      var condition = false;
+      var key = myDiagram.selection.first().key;
+      var a = searchArray(flow, key, "key")
+      var toLang="";
+
+      var userText=activity.text;
+
+      if (a.parVar) {
+        Bot.userData[a.parVar] = userText;
+      }
+
+      if (Bot.translator!=null)
+      {
+        console.log(Bot.translator)
+        toLang=Bot.userData[Bot.translator.variable];
+        if (a.parTra=="Yes"){
+          userText=translate(Bot.translator.key, userText, toLang, Bot.translator.to);
+          if (a.parVar) {
+            Bot.userData[a.parVar + "_" + toLang] = userText;
+          }
+        }
+      }
+
+      var topScoringIntent = "None";
+      if (a.type == "LUIS") {
+        //DO THE CALL
+        var LUISResult = undefined;
+        try {
+          var url = a.parURL + "/luis/v2.0/apps/" + a.parPar + "?subscription-key=" + a.parKey + "&q=" + userText;
+          var res = $.get({ url: url, async: false }).responseText;
+          LUISResult = JSON.parse(res);
+        } catch (error) {
+          alert("ERROR IN LUIS PARAMETERS");
+        }
+        if (LUISResult) {
+          topScoringIntent = LUISResult.topScoringIntent.intent;
+          if (LUISResult.sentimentAnalysis) {
+            Bot.userData[a.parVar + ".sentiment.label"] = LUISResult.sentimentAnalysis.label;
+            Bot.userData[a.parVar + ".sentiment.score"] = LUISResult.sentimentAnalysis.score;
+          }
+          LUISResult.entities.forEach(element => {
+            Bot.userData[a.parVar + "." + element.type] = element.entity;
+          });
+        }
+        if (document.all("chkLUISDebug").checked) {
+          LUISDebug(a, LUISResult);
+        }
+      }
+      if (a.type == "QNA") {
+        //DO THE CALL
+        var QNAResult = undefined;
+        try {
+          var url = a.parURL + "/knowledgebases/" + a.parPar + "/generateAnswer";
+          var headers = { "Authorization": "EndpointKey " + a.parKey, "Content-Type": "application/json" };
+          var res = $.post({
+            url: url,
+            headers: headers,
+            async: false,
+            data: "{\"question\":\"" + encodeURI(userText) + "\"}"
+          }).responseText;
+          QNAResult = JSON.parse(res);
+        } catch (error) {
+          alert("ERROR IN QNA PARAMETERS");
+        }
+        if (QNAResult) {
+          topScoringIntent = QNAResult.answers[0].answer;
+        }
+      }
+
+      var messages = [];
+      var bailout=0;
+      do {
+        bailout++;
+        condition = false;
+        var text = userText;
+
+        if (a.type == "IF") {
+          text = Bot.ReplacePragmas(a.parCon)
+          text = eval(text).toString();
+        }
+        if (a.type == "LUIS") {
+          text = topScoringIntent;
+        }
+        if (a.type == "QNA") {
+          messages.push({ type: "MESSAGE", text: topScoringIntent });
+        }
+        if (a.type=="REST")
+        {
+          //REST= a
+          var post = Bot.ReplacePragmas(a.parPar);
+          var returnValue=RESTCall(post);
+          var dom = jsel(JSON.parse(returnValue));
+      
+          //FILTER= a.parKey
+          var results=dom.selectAll(a.parKey);
+          var extension="";
+          for (let index = 0; index < results.length; index++) {
+              const element = results[index];
+
+              var dom2 = jsel(element);
+
+              //SEARCH a.parCrd for ${}
+              var crd=a.parCrd;
+              var p=1;
+              while(p>0) {
+                p=crd.indexOf("${");
+                if (p>=0)
+                {
+                  var pd=crd.indexOf("}",p);
+                  var field=crd.substring(p+2,pd);
+
+                  var text=dom2.select(field);
+
+                  crd=crd.substring(0,p) + text + crd.substring(pd+1);
+                }
+              }
+
+              if (extension!="")
+                  extension+=","
+              extension+=crd;
+          }
+          extension="[" + extension + "]";
+      
+          messages.push({ type: "REST", text: "", attachmentLayout:"carousel", extension:{ "attachments": JSON.parse(extension) } });
+        }
+        if (a.type=="START"){
+          if (a.parTra=="Yes"){
+            Bot.translator={key:a.parKey, to:a.parAPI, variable:a.parVar};
+          }
+          else
+            Bot.translator=null;
+        }
+
+
+        var FieldDefinition=GetTypeDefinition(a.type)
+
+        var nxt = Bot.getNext(a.next, text);
+        //CHECK INVALID CHOICE
+        if (!nxt && FieldDefinition.needValidChoice=="true")
+        {
+          nxt=a.key;
+        }
+        if (activity.playStep)
+        {
+          activity.playStep=null;
+          nxt=myDiagram.selection.first().key;
+        }
+        if (nxt) {
+          var goto = searchArray(flow, nxt, "key")
+          var FieldDefinition=GetTypeDefinition(goto.type)
+          var bSendMessage = true;
+          if (FieldDefinition.showMessage=="false")
+            bSendMessage = false;
+          if (goto.type == "INPUT") {
+            if (goto.parCkv == "No" && Bot.userData[goto.parVar]) {
+              bSendMessage = false;
+              condition = true;
+            }
+          }
+          if (goto.type == "DIALOG") {
+            goto.text = "Transfer to Dialog " + goto.parAPI;
+            messages.push(goto);
+          }
+          if (goto.type == "RESETVAR") {
+            var a = goto.parVar.split(",");
+            for (let index = 0; index < a.length; index++) {
+              const element = a[index];
+              delete Bot.userData[element];
+            }
+          }
+
+          if (bSendMessage) {
+            if (goto.parTro=="Yes" && Bot.translator)
+            {
+              goto.text=translate(Bot.translator.key, goto.text, Bot.translator.to,toLang);
+            }
+            messages.push(goto);
+          }
+
+          myDiagram.select(myDiagram.findNodeForKey(nxt));
+
+          var a = searchArray(flow, nxt, "key")
+          FieldDefinition=GetTypeDefinition(a.type)
+          if (FieldDefinition.waitForUserInput!="true")
+            condition = true;
+        }
+        else {
+          messages.push({ type: "MESSAGE", text: "<end of flow>" });
+        }
+      } while (condition && bailout<100);
+      $("#userdatavalue").html(JSON.stringify(Bot.userData));
+      Bot.sendBotMessage(messages);
+    }
+    else {
+      Bot.sendMessage("Design flow and then interact with it");
+    }
+
   },
   getNext: function (nextOptions, message) {
     //TODO: evaluate nextOption
@@ -628,7 +665,7 @@ var Bot = {
               extension = { "attachments": [JSON.parse(flowItem.parCrd)] };
               break;
           }
-          console.log(extension);
+          //console.log(extension);
           break;
         case "CHOICE":
           var actions = [];
@@ -742,10 +779,10 @@ function LUISAddUtterance() {
       "entityLabels": []
     },
     success: function (data) {
-      console.log(data);
+      //console.log(data);
     },
     error: function (data) {
-      console.log(data);
+      //console.log(data);
       alert("Failed to add Utterance");
     }
   });
@@ -856,4 +893,20 @@ function RESTCall(s){
         alert(message)
       }
   }).responseText);
+}
+function translate(key,text,from,to){
+  if (from==to || !to || !from)
+    return text;
+  var res=$.ajax({
+    method:"POST",
+    url:"https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&from=" + from + "&to=" + to,
+    headers:{"Content-Type":"application/json","Ocp-Apim-Subscription-Key": key},
+    data:JSON.stringify([{"Text":text}]),
+    async:false,
+    error:function(x,message){
+      alert(message)
+    }
+  }).responseText;
+  res=JSON.parse(res)[0].translations[0].text;
+  return res;
 }

@@ -3,8 +3,12 @@
 
 // DEPLOYMENT INSTRUCTIONS:
 // 1. GET FULL NODE PROJECT FROM: https://github.com/luisalvesmartins/botconversationdesigner/tree/master/botcode/csharp
-// 2. REPLACE THE FILE DIALOGS/MAIN.JS WITH THIS CONTENT 
+//    OR FROM HERE: https://lambot.blob.core.windows.net/github/botconversationdesigner/samplecsharp.zip
+// 2. REPLACE THE FILE DIALOGS/MAIN.CS WITH THIS CONTENT 
 // 3. RUN THE BOT
+//
+// MISSING FEATURES:
+// TYPE: card,API,DIALOG
 
 using System;
 using System.Collections.Generic;
@@ -18,6 +22,7 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Builder.AI.QnA;
 using Microsoft.Bot.Configuration;
+using Microsoft.Bot.Builder.Dialogs.Choices;
 
 namespace sample
 {
@@ -32,19 +37,23 @@ namespace sample
     {
         public string MAIN_DIALOG = "mainDialog";
         public string NAME_PROMPT = "namePrompt";
+        public string CHOICE_PROMPT = "choicePrompt";
 
         // TEXT STRINGS
         public const string STRING_1 = "I am the Echo Bot Sample. Hint: read the flow on the right and try the different paths";
-        public const string STRING_2 = "Please shout something";
-        public const string STRING_3 = "You said: {SHOUT}";
-        public const string STRING_4 = "Check if you are saying ECHO";
-        public const string STRING_5 = "ECHO... ECHO... ECHO...";
-        public const string STRING_6 = "Choose a color using natural language (LUIS)";
-        public const string STRING_7 = "Blue: nice color!";
-        public const string STRING_8 = "Red: nice color!";
-        public const string STRING_9 = "I couldn't figure it out so you can play with QNAMaker";
-        public const string STRING_10 = "Chitchat with me (EXIT to leave)";
-        public const string STRING_11 = "is EXIT?";
+        public const string STRING_2 = "Choice";
+        public const string STRING_3 = "Ask A";
+        public const string STRING_4 = "Please shout something";
+        public const string STRING_5 = "You said: {SHOUT}";
+        public const string STRING_6 = "Check if you are saying ECHO";
+        public const string STRING_7 = "ECHO... ECHO... ECHO...";
+        public const string STRING_8 = "Choose a color using natural language (LUIS)";
+        public const string STRING_9 = "Blue: nice color!";
+        public const string STRING_10 = "Red: nice color!";
+        public const string STRING_11 = "I couldn't figure it out so you can play with QNAMaker";
+        public const string STRING_12 = "Chitchat with me (EXIT to leave)";
+        public const string STRING_13 = "is EXIT?";
+        public const string STRING_14 = "Ask B";
 
 
 
@@ -68,6 +77,7 @@ namespace sample
                                                     }
                     ));
             AddDialog(new TextPrompt(NAME_PROMPT));
+            AddDialog(new ChoicePrompt(CHOICE_PROMPT) { Style = ListStyle.SuggestedAction });
         }
 
         public IStatePropertyAccessor<userState> UserProfileAccessor { get; }
@@ -90,40 +100,49 @@ namespace sample
                     await step.Context.SendActivityAsync(await this.ReplacePragmas(step, STRING_1));
                     return await step.NextAsync();
 
-                case 2:  //INPUT-Please shout something
+                case 2:  //CHOICE-Choice
                     return await this.STEP_2(step);
 
-                case 3:  //MESSAGE-You said: {SHOUT}
-                    await step.Context.SendActivityAsync(await this.ReplacePragmas(step, STRING_3));
-                    return await step.NextAsync();
+                case 3:  //INPUT-Ask A
+                    return await this.STEP_3(step);
 
-                case 4:  //IF-Check if you are saying ECHO
-                    return await step.NextAsync();
+                case 4:  //INPUT-Please shout something
+                    return await this.STEP_4(step);
 
-                case 5:  //MESSAGE-ECHO... ECHO... ECHO...
+                case 5:  //MESSAGE-You said: {SHOUT}
                     await step.Context.SendActivityAsync(await this.ReplacePragmas(step, STRING_5));
                     return await step.NextAsync();
 
-                case 6:  //LUIS-Choose a color using natural language (LUIS)
-                    return await this.STEP_6(step);
+                case 6:  //IF-Check if you are saying ECHO
+                    return await step.NextAsync();
 
-                case 7:  //MESSAGE-Blue: nice color!
+                case 7:  //MESSAGE-ECHO... ECHO... ECHO...
                     await step.Context.SendActivityAsync(await this.ReplacePragmas(step, STRING_7));
                     return await step.NextAsync();
 
-                case 8:  //MESSAGE-Red: nice color!
-                    await step.Context.SendActivityAsync(await this.ReplacePragmas(step, STRING_8));
-                    return await step.NextAsync();
+                case 8:  //LUIS-Choose a color using natural language (LUIS)
+                    return await this.STEP_8(step);
 
-                case 9:  //MESSAGE-I couldn't figure it out so you can play with QNAMaker
+                case 9:  //MESSAGE-Blue: nice color!
                     await step.Context.SendActivityAsync(await this.ReplacePragmas(step, STRING_9));
                     return await step.NextAsync();
 
-                case 10:  //QNA-Chitchat with me (EXIT to leave)
-                    return await this.STEP_10(step);
-
-                case 11:  //IF-is EXIT?
+                case 10:  //MESSAGE-Red: nice color!
+                    await step.Context.SendActivityAsync(await this.ReplacePragmas(step, STRING_10));
                     return await step.NextAsync();
+
+                case 11:  //MESSAGE-I couldn't figure it out so you can play with QNAMaker
+                    await step.Context.SendActivityAsync(await this.ReplacePragmas(step, STRING_11));
+                    return await step.NextAsync();
+
+                case 12:  //QNA-Chitchat with me (EXIT to leave)
+                    return await this.STEP_12(step);
+
+                case 13:  //IF-is EXIT?
+                    return await step.NextAsync();
+
+                case 14:  //INPUT-Ask B
+                    return await this.STEP_14(step);
 
                 default:
                     userProfile.step = 1;
@@ -137,7 +156,7 @@ namespace sample
         private async Task<DialogTurnResult> LOOP(WaterfallStepContext step, CancellationToken cancellationToken)
         {
             var userProfile = await UserProfileAccessor.GetAsync(step.Context, () => null);
-            var stepResult = (string)step.Result;
+            var stepResult = getResult(step);
             string expression = "";
 
 
@@ -149,52 +168,64 @@ namespace sample
                     userProfile.step = 2;
                     break;
 
-                case 2:  //INPUT-Please shout something
+                case 2:  //CHOICE-Choice
+                    this.addProp(userProfile, "undefined", stepResult); if (stepResult == await this.ReplacePragmas(step, "A")) userProfile.step = 3;
+                    if (stepResult == await this.ReplacePragmas(step, "B")) userProfile.step = 14;
+
+                    break;
+
+                case 3:  //INPUT-Ask A
+                    if (stepResult != "")
+                        this.addProp(userProfile, "undefined", stepResult);
+                    userProfile.step =1;
+                    break;
+
+                case 4:  //INPUT-Please shout something
                     if (stepResult != "")
                         this.addProp(userProfile, "SHOUT", stepResult);
-                    userProfile.step = 3;
+                    userProfile.step = 5;
                     break;
 
-                case 3:  //MESSAGE-You said: {SHOUT}
-                    userProfile.step = 4;
-                    break;
-
-                case 4:  //IF-Check if you are saying ECHO
-                    expression = await this.ReplacePragmas(step, "\"{SHOUT}\"==\"ECHO\"");
-                    if (this.evalCondition(expression))
-                        userProfile.step = 5;
-                    else
-                        userProfile.step = 2;
-                    break;
-
-                case 5:  //MESSAGE-ECHO... ECHO... ECHO...
+                case 5:  //MESSAGE-You said: {SHOUT}
                     userProfile.step = 6;
                     break;
 
-                case 6:  //LUIS-Choose a color using natural language (LUIS)
+                case 6:  //IF-Check if you are saying ECHO
+                    expression = await this.ReplacePragmas(step, "\"{SHOUT}\"==\"ECHO\"");
+                    if (this.evalCondition(expression))
+                        userProfile.step = 7;
+                    else
+                        userProfile.step = 4;
+                    break;
+
+                case 7:  //MESSAGE-ECHO... ECHO... ECHO...
+                    userProfile.step = 8;
+                    break;
+
+                case 8:  //LUIS-Choose a color using natural language (LUIS)
                     var luisRecognizer = LuisRec("914db407-b188-442c-8306-c9cb781faadc", "c6e72331a84c4d23a590c503c360c35b", "https://westus.api.cognitive.microsoft.com");
                     var results = await luisRecognizer.RecognizeAsync(step.Context, new CancellationToken()); var topIntent = LuisRecognizer.TopIntent(results);
                     this.addProp(userProfile, "LUISVAR", stepResult);
-                    userProfile.step = 6;
-                    if (topIntent == await this.ReplacePragmas(step, "blue_intent")) userProfile.step = 7;
-                    if (topIntent == await this.ReplacePragmas(step, "red_intent")) userProfile.step = 8;
-                    if (topIntent == await this.ReplacePragmas(step, "None")) userProfile.step = 9;
+                    userProfile.step = 8;
+                    if (topIntent == await this.ReplacePragmas(step, "blue_intent")) userProfile.step = 9;
+                    if (topIntent == await this.ReplacePragmas(step, "red_intent")) userProfile.step = 10;
+                    if (topIntent == await this.ReplacePragmas(step, "None")) userProfile.step = 11;
 
                     break;
 
-                case 7:  //MESSAGE-Blue: nice color!
-                    userProfile.step = 2;
+                case 9:  //MESSAGE-Blue: nice color!
+                    userProfile.step = 4;
                     break;
 
-                case 8:  //MESSAGE-Red: nice color!
-                    userProfile.step = 2;
+                case 10:  //MESSAGE-Red: nice color!
+                    userProfile.step = 4;
                     break;
 
-                case 9:  //MESSAGE-I couldn't figure it out so you can play with QNAMaker
-                    userProfile.step = 10;
+                case 11:  //MESSAGE-I couldn't figure it out so you can play with QNAMaker
+                    userProfile.step = 12;
                     break;
 
-                case 10:  //QNA-Chitchat with me (EXIT to leave)
+                case 12:  //QNA-Chitchat with me (EXIT to leave)
                     var qnaMaker = QnA("b8fb0e89-daeb-46f0-9a23-3762df2080a3", "b99d3036-03b3-41c0-98dd-6c90a7aee95c", "https://lambotengineqna.azurewebsites.net/qnamaker");
                     var qnaResults = await qnaMaker.GetAnswersAsync(step.Context); if (qnaResults.Length > 0)
                     {
@@ -206,15 +237,21 @@ namespace sample
 
                     this.addProp(userProfile, "QNA", stepResult);
 
-                    userProfile.step = 11;
+                    userProfile.step = 13;
                     break;
 
-                case 11:  //IF-is EXIT?
+                case 13:  //IF-is EXIT?
                     expression = await this.ReplacePragmas(step, "\"{QNA}\"==\"EXIT\"");
                     if (this.evalCondition(expression))
-                        userProfile.step = 2;
+                        userProfile.step = 4;
                     else
-                        userProfile.step = 10;
+                        userProfile.step = 12;
+                    break;
+
+                case 14:  //INPUT-Ask B
+                    if (stepResult != "")
+                        this.addProp(userProfile, "undefined", stepResult);
+                    userProfile.step = 1;
                     break;
 
 
@@ -229,23 +266,42 @@ namespace sample
 
         ///FUNCTIONS
 
-        async Task<DialogTurnResult> STEP_2(WaterfallStepContext step) //INPUT-Please shout something
+        async Task<DialogTurnResult> STEP_2(WaterfallStepContext step) //CHOICE-Choice
         {
-            ; var text = await this.ReplacePragmas(step, STRING_2);
+            return await step.PromptAsync(CHOICE_PROMPT, suggestActionsOptions(await this.ReplacePragmas(step, STRING_2), new string[] { await this.ReplacePragmas(step, "A"), await this.ReplacePragmas(step, "B") }));
+        }
+
+        async Task<DialogTurnResult> STEP_3(WaterfallStepContext step) //INPUT-Ask A
+        {
+            ; var text = await this.ReplacePragmas(step, STRING_3);
             var promptoptions = new PromptOptions { Prompt = new Activity { Type = ActivityTypes.Message, Text = text, } };
             return await step.PromptAsync(NAME_PROMPT, promptoptions);
         }
 
-        async Task<DialogTurnResult> STEP_6(WaterfallStepContext step) //LUIS-Choose a color using natural language (LUIS)
+        async Task<DialogTurnResult> STEP_4(WaterfallStepContext step) //INPUT-Please shout something
         {
-            var text = await this.ReplacePragmas(step, STRING_6);
+            ; var text = await this.ReplacePragmas(step, STRING_4);
             var promptoptions = new PromptOptions { Prompt = new Activity { Type = ActivityTypes.Message, Text = text, } };
             return await step.PromptAsync(NAME_PROMPT, promptoptions);
         }
 
-        async Task<DialogTurnResult> STEP_10(WaterfallStepContext step) //QNA-Chitchat with me (EXIT to leave)
+        async Task<DialogTurnResult> STEP_8(WaterfallStepContext step) //LUIS-Choose a color using natural language (LUIS)
         {
-            var text = await this.ReplacePragmas(step, STRING_10);
+            var text = await this.ReplacePragmas(step, STRING_8);
+            var promptoptions = new PromptOptions { Prompt = new Activity { Type = ActivityTypes.Message, Text = text, } };
+            return await step.PromptAsync(NAME_PROMPT, promptoptions);
+        }
+
+        async Task<DialogTurnResult> STEP_12(WaterfallStepContext step) //QNA-Chitchat with me (EXIT to leave)
+        {
+            var text = await this.ReplacePragmas(step, STRING_12);
+            var promptoptions = new PromptOptions { Prompt = new Activity { Type = ActivityTypes.Message, Text = text, } };
+            return await step.PromptAsync(NAME_PROMPT, promptoptions);
+        }
+
+        async Task<DialogTurnResult> STEP_14(WaterfallStepContext step) //INPUT-Ask B
+        {
+            ; var text = await this.ReplacePragmas(step, STRING_14);
             var promptoptions = new PromptOptions { Prompt = new Activity { Type = ActivityTypes.Message, Text = text, } };
             return await step.PromptAsync(NAME_PROMPT, promptoptions);
         }
@@ -307,6 +363,33 @@ namespace sample
             Q.Hostname = Hostname;
             return new QnAMaker(Q);
         }
+        PromptOptions suggestActionsOptions(string prompt, string[] choices)
+        {
+            List<Choice> LC = new List<Choice>();
+            foreach (var item in choices)
+            {
+                LC.Add(new Choice(item));
+            }
+            var opts = new PromptOptions
+            {
+                Prompt = MessageFactory.Text(prompt),
+                Choices = LC
+            };
 
+            return opts;
+        }
+        string getResult(WaterfallStepContext step)
+        {
+            string stepResult = "";
+            try
+            {
+                stepResult = (string)step.Result;
+            }
+            catch (Exception)
+            {
+                stepResult = ((FoundChoice)step.Result).Value;
+            }
+            return stepResult;
+        }
     }
 }

@@ -354,33 +354,8 @@ var menu =
   },
   PlayStep: function () {
     if (myDiagram.selection.count > 0) {
-      var flow = LoadAndSave.prepareSave().flow;
       var key = myDiagram.selection.first().key;
-      var a = searchArray(flow, key, "key")
-
-      if (a != null) {
-        var condition = false;
-
-        //CORE PROCESS
-        var messages = [a];
-        do {
-          condition = false;
-          var nxt = Bot.getNext(a.next, "");
-          if (nxt) {
-            var goto = searchArray(flow, nxt, "key")
-            messages.push(goto);
-            myDiagram.select(myDiagram.findNodeForKey(nxt));
-
-            var a = searchArray(flow, nxt, "key")
-            if (a.type == "MESSAGE" || a.type == "START")
-              condition = true;
-          }
-          else {
-            messages.push({ type: "MESSAGE", text: "<end of flow>" });
-          }
-        } while (condition);
-        Bot.sendBotMessage(messages);
-      }
+      Bot.processMessage({text:"", playStep:"yes", "next": [{ "to": key, "text": "" }]});
     }
     else
       alert("Select a step first");

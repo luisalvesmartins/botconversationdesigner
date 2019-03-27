@@ -40,7 +40,7 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
 - File content is compatible with botengine project
 
 - Builtin activities
-    - Start - Initialize the flow
+    - Start - Initialize the flow, enable translation services
     - Input - Ask for user input
     - Choice - Presents navigation options to user
     - If - Evaluates condition, flows to true or false branches
@@ -54,13 +54,15 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
     - REST Call - Performs a REST call
 
 ## Implementation backlog:
-- EXPORT TO Node missing features
+- EXPORT TO Node missing features:
     - API
     - DIALOG
-- EXPORT TO C# missing features: 
+    - Translation (runs on the html but is not yet included on the export)
+- EXPORT TO C# missing features: (will implement only if there is demand)
     - card
     - API
     - DIALOG
     - REST CALL
+    - Translation
 - (new feature) Enable check if variable is already filled for any activity
 - Enable publishing LUIS utterances with entities definition.
