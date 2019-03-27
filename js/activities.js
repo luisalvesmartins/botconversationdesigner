@@ -484,6 +484,9 @@ var Bot = {
         }
         if (QNAResult) {
           topScoringIntent = QNAResult.answers[0].answer;
+          if (a.parVar) {
+            Bot.userData[a.parVar + "_Result"] = topScoringIntent;
+          }
         }
       }
 
