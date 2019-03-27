@@ -431,7 +431,7 @@ var Bot = {
 
       if (Bot.translator!=null)
       {
-        console.log(Bot.translator)
+        //console.log(Bot.translator)
         toLang=Bot.userData[Bot.translator.variable];
         if (a.parTra=="Yes"){
           userText=translate(Bot.translator.key, userText, toLang, Bot.translator.to);
