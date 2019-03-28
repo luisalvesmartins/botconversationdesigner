@@ -333,8 +333,21 @@ var menu =
       var textFromFileLoaded = fileLoadedEvent.target.result;
       document.getElementById("mySavedModel").value = textFromFileLoaded;
       var model = JSON.parse(textFromFileLoaded);
-
-      myDiagram.model = go.Model.fromJson(model.diagram);
+      if (!model.dialogs)
+      {
+          model.dialogs=[model.diagram];
+          delete model.diagram;
+      }
+      else
+        Tab.dialogs=model.dialogs;
+      if (model.tabs){
+        Tab.tabs=model.tabs;
+        Tab.selected=0;
+        Tab.draw();
+      }
+      else
+        Tab.init();
+      myDiagram.model = go.Model.fromJson(model.dialogs[0]);
       LoadAndSave.loadDiagramProperties();
       Bot.userData = {};
     };

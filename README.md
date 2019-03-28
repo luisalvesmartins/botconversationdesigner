@@ -45,8 +45,8 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
     - Choice - Presents navigation options to user
     - If - Evaluates condition, flows to true or false branches
     - Message - Displays a message
-    - LUIS - Calls LUIS
-    - QNA - Calls QNA
+    - LUIS - Calls LUIS Service
+    - QNA - Calls QNA Service
     - Card - Presents a Card
     - API - Calls an API
     - Dialog - Jumps to another Dialog
@@ -56,8 +56,9 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
 ## Implementation backlog:
 - EXPORT TO Node missing features:
     - API
-    - DIALOG
+    - DIALOG (runs on the html but is not yet included on the export)
     - Translation (runs on the html but is not yet included on the export)
+    - Application Insights configurations
 - EXPORT TO C# missing features: (will implement only if there is demand)
     - card
     - API

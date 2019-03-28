@@ -5,6 +5,8 @@ function goDiagram(){
     myDiagram =
       $(go.Diagram, "myDiagramDiv",  // must name or refer to the DIV HTML element
         {
+          "undoManager.isEnabled": true,
+          "animationManager.isEnabled": false,
           grid: $(go.Panel, "Grid",
                   $(go.Shape, "LineH", { stroke: "lightgray", strokeWidth: 0.5 }),
                   $(go.Shape, "LineH", { stroke: "gray", strokeWidth: 0.5, interval: 10 }),

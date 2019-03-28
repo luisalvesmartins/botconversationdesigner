@@ -1,36 +1,3 @@
-// //#region SYNC AND PLAY THE STEP THAT IS SELECTED
-// function onDrawingEvent(data){
-//   myDiagram.select(myDiagram.findPartForKey(Number(data)));
-// }
-// //#endregion
-
-// //#region SHOW DATA
-// function showDataNodes(data){
-//   LoadAndSave.removeDataNodes();
-//   myDiagram.startTransaction("make new node");
-//   var total=myDiagram.model.nodeDataArray.length;
-//   for (let index = 0; index < total; index++) {
-//     const element = myDiagram.model.nodeDataArray[index];
-//     if (element.parVar!="")
-//     {
-//       var text=data[element.parVar];
-//       if (text!="" && text){
-//         var b=go.Point.parse(element.loc).offset(20,20);
-//         if ("#MESSAGE#START#".indexOf("#" + element.type + "#")<0)
-//           myDiagram.model.addNodeData(    
-//             {"text":text, 
-//             "fill":"#FFFFE0", "loc":go.Point.stringify(b), "angle":0, "size":"100 50", 
-//             "opacity":0.7,
-//             "type":"DATASHOW"}
-//           );
-//       }
-
-//     }
-//   }
-//   myDiagram.commitTransaction("make new node");
-// }
-// //#endregion
-
 //#region PARAMETERS
 var Card = {
   getImages: function () {
@@ -304,10 +271,18 @@ var LoadAndSave = {
     LoadAndSave.saveDiagramProperties();  // do this first, before writing to JSON
 
     var sDiagram = myDiagram.model.toJson();
-    var Flow = LoadAndSave.convertDiagramToBot(sDiagram);
-    return { flow: Flow, diagram: JSON.parse(sDiagram) }
+    Tab.dialogs[Tab.selected]=sDiagram;
+
+    var Flow=[];
+    for (let index = 0; index < Tab.dialogs.length; index++) {
+      const element = Tab.dialogs[index];
+
+      var botObject = LoadAndSave.convertDiagramToBot(element,Tab.tabs[index]);
+      Flow=Flow.concat(botObject);
+    }
+    return { flow: Flow, dialogs:Tab.dialogs, tabs:Tab.tabs };
   },
-  convertDiagramToBot: function (diagram) {
+  convertDiagramToBot: function (diagram,dialogName) {
     var goObj = JSON.parse(diagram);
     var botObject = [];
     for (var f = 0; f < goObj.nodeDataArray.length; f++) {
@@ -325,7 +300,8 @@ var LoadAndSave = {
         parVar: gO.parVar, parURL: gO.parURL, parKey: gO.parKey, parTyp: gO.parTyp, parLMI: gO.parLMI,
         parCon: gO.parCon, parPar: gO.parPar, parCar: gO.parCar, parAPI: gO.parAPI, parAPO: gO.parAPO,
         parCrd: gO.parCrd, parCkv: gO.parCkv, 
-        parTx0: gO.parTx0, parTx1:gO.parTx1, parTro: gO.parTro, parTra:gO.parTra
+        parTx0: gO.parTx0, parTx1:gO.parTx1, parTro: gO.parTro, parTra:gO.parTra,
+        dialog:dialogName
       })
     }
     return botObject;
@@ -351,6 +327,7 @@ var LoadAndSave = {
 
 
 var Bot = {
+  dialogstack:[],
   messageID: 0,
   lastActivity: null,
   key: 0,
@@ -416,6 +393,8 @@ var Bot = {
   },
   processMessage(activity){
     //MOVE NEXT
+    //LOOK AT 
+    //var selectedDialog=Tab.Tabs[Tab.Selected];
     if (myDiagram.selection.count > 0) {
       var flow = LoadAndSave.prepareSave().flow;
       var condition = false;
@@ -424,7 +403,6 @@ var Bot = {
       var toLang="";
 
       var userText=activity.text;
-
       if (a.parVar) {
         Bot.userData[a.parVar] = userText;
       }
@@ -553,7 +531,18 @@ var Bot = {
           else
             Bot.translator=null;
         }
-
+        if (a.type=="DIALOGEND")
+        {
+          //RETURN TO PREVIOUS DIALOG
+          var currentPos=Bot.dialogstack.pop();
+          //console.log(currentPos);
+          Tab.sel(currentPos.previousTab);
+          //find currentPos.key
+          var goto = searchArray(flow, currentPos.key, "key");
+          a.next=goto.next;
+          myDiagram.select(myDiagram.findNodeForKey(currentPos.key));
+          //console.log(goto);
+        }
 
         var FieldDefinition=GetTypeDefinition(a.type)
 
@@ -580,9 +569,37 @@ var Bot = {
               condition = true;
             }
           }
+
           if (goto.type == "DIALOG") {
-            goto.text = "Transfer to Dialog " + goto.parAPI;
-            messages.push(goto);
+            var tabSel=Tab.getTabIndexFromName(goto.parAPI);
+            if (tabSel==-1)
+            {
+              goto.text = "ERROR: Couldn't find Dialog " + goto.parAPI;
+              messages.push(goto);
+            }
+            else{
+              var currentTab=Tab.selected;
+              Tab.sel(tabSel);
+
+              var bFound=false;
+              for (let index = 0; index < flow.length; index++) {
+                const element = flow[index];
+                if (element.dialog==goto.parAPI && element.type=="DIALOGSTART")
+                {
+                  nxt=element.key;
+                  bFound=true;
+                  //ADD TO THE DIALOG STACK
+                  Bot.dialogstack.push({dialog:a.dialog, key:goto.key, previousTab:currentTab});
+
+                  break;
+                }
+              }
+              if (!bFound)
+              {
+                goto.text = "ERROR: No Start Dialog activity found!";
+                messages.push(goto);
+              }
+            }
           }
           if (goto.type == "RESETVAR") {
             var a = goto.parVar.split(",");
@@ -757,9 +774,11 @@ function replaceAll(text, search, replacement) {
   text += "";
   return text.replace(new RegExp(search, 'g'), replacement);
 };
-function searchArray(myArray, nameKey, prop) {
+function searchArray(myArray, nameKey, prop,dialog) {
+  if (!dialog)
+    dialog=Tab.tabs[Tab.selected];
   for (var i = 0; i < myArray.length; i++) {
-    if (myArray[i][prop] === nameKey) {
+    if (myArray[i][prop] === nameKey && myArray[i]["dialog"]==dialog) {
       return myArray[i];
     }
   }
@@ -912,4 +931,60 @@ function translate(key,text,from,to){
   }).responseText;
   res=JSON.parse(res)[0].translations[0].text;
   return res;
+}
+
+var Tab={
+  tabs:[],
+  selected:-1,
+  dialogs:[],
+  add:function(){
+    var tabName=prompt("Dialog Name","new");
+    if (tabName){
+      var n=Tab.tabs.length-1;
+      Tab.tabs[n]=tabName;
+      Tab.tabs.push("+");
+      Tab.draw();
+      Tab.dialogs.push({ "class": "go.GraphLinksModel",  "modelData": {"position":"-5 -5"},  "nodeDataArray": [ {"text":"Start\nDialog", "figure":"Circle", "fill":"#00AD5F", "type":"DIALOGSTART", "key":-14, "loc":"100 60"},{"text":"End\nDialog", "figure":"Circle", "fill":"#00AD5F", "type":"DIALOGEND", "key":-15, "loc":"100 490"} ],  "linkDataArray": [ {"from":-14, "to":-15, "points":[100,94.09738338825315,100,104.09738338825315,100,275,100,275,100,445.90261661174685,100,455.90261661174685]} ]}
+        );
+      Tab.sel(n);
+    }
+  },
+  init:function(){
+    Tab.tabs=["Main","+"];
+    Tab.selected=0;
+    Tab.dialogs[0]={};
+    Tab.draw();
+  },
+  sel:function(nTab){
+    if (Tab.selected!=-1){
+      $("#tab" + Tab.selected).removeClass("tabsel");
+      Tab.dialogs[Tab.selected]=myDiagram.model.toJson();
+    }
+    Tab.selected=nTab;
+    $("#tab" + nTab).addClass("tabsel");
+    myDiagram.model = go.Model.fromJson(Tab.dialogs[Tab.selected]);
+
+    //DRAW SCENARIO
+  },
+  draw:function(){
+    sH="";
+    for (let index = 0; index < Tab.tabs.length; index++) {
+      const element = Tab.tabs[index];
+      if (element=="+")
+        sH+=`<div id="tab${index}" onclick="Tab.add()">${element}</div>`;
+      else
+        sH+=`<div id="tab${index}" onclick="Tab.sel(${index})">${element}</div>`;
+    }
+    $("#tabhost").html(sH);
+    $("#tab" + Tab.selected).addClass("tabsel");
+  },
+  getTabIndexFromName(tabName){
+    for (let index = 0; index < Tab.tabs.length; index++) {
+      if (Tab.tabs[index]==tabName)
+      {
+        return index;
+      }
+    }
+    return -1;
+  }
 }
