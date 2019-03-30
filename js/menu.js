@@ -55,7 +55,7 @@ var menu =
     });
   },
   comment: function (element) {
-    return element.type + '-' + replaceAll(element.text, '\n', '');
+    return element.type + '-' + replaceAll(element.text, '\n', '') + '-' + replaceAll(element.dialog, '\n', '');
   },
   exportcore: function (template, CONTEXT_NEXT, STRING_DECLARATION, SEND_ACTIVITY, STEP_DECLARATION, FUNCTION_DECLARATION, PROMPT_FUNCTION, PROMPT_CONVERSION, GETUSERPROFILE, SUGGESTEDACTIONS, LUIS_RECOGNIZE, QNA_RESULTS, ARRAY_PREFIX, ARRAY_SUFIX, CHOICE_FUNCTION) {
     var flow = LoadAndSave.prepareSave().flow;
@@ -66,17 +66,13 @@ var menu =
     var index = 1;
     var goto = startElement;
     do {
-      // console.log(goto)
-      // console.log(goto.next)
       var next = Bot.getNext(goto.next, "");
       if (!next) {
         if (goto.next.length > 0)
           next = goto.next[0].to;
       }
-      //console.log(next)
       if (next) {
         var goto = searchArray(flow, next, "key")
-        //console.log("GOTO:" + goto.key)
         if (goto.newIndex)
           next = null;
         else {
@@ -102,7 +98,8 @@ var menu =
     var output = "";
     for (let index = 0; index < flow.length; index++) {
       const element = flow[index];
-      output += STRING_DECLARATION + 'STRING_' + element.newIndex + '="' + replaceAll(element.text, '\n', '') + '";\n';
+      if (element.type!="DIALOGSTART" && element.type!="DIALOGEND" && element.type!="IF" && element.type!="DIALOG")
+        output += STRING_DECLARATION + 'STRING_' + element.newIndex + '="' + replaceAll(element.text, '\n', '') + '";\n';
     }
     template = template.replace("###TEXTSTRINGS###", output);
 
@@ -114,7 +111,7 @@ var menu =
       const element = flow[index];
 
       var nextKey = Bot.getNext(element.next, "");
-      var nextElem = searchArray(flow, nextKey, "key");
+      var nextElem = searchArray(flow, nextKey, "key", element.dialog);
       var n = "\"ERROR\"";
       if (nextElem)
         n = nextElem.newIndex;
@@ -133,7 +130,6 @@ var menu =
           break;
         case "REST":
           output += `   
-          console.log("REST");
 
           var req=await this.ReplacePragmas(step,\`${element.parPar}\`);
           var key=await this.ReplacePragmas(step,\`${element.parKey}\`);
@@ -166,7 +162,7 @@ var menu =
           var op = "";
           for (let i = 0; i < element.next.length; i++) {
             const elementNext = element.next[i];
-            var t = searchArray(flow, elementNext.to, "key").newIndex;
+            var t = searchArray(flow, elementNext.to, "key",element.dialog).newIndex;
             s += "if (stepResult==await this.ReplacePragmas(step,\"" + elementNext.text + "\")) userProfile.step=" + t + ";\n";
             if (op != "") op += ",";
             op += "await this.ReplacePragmas(step,\"" + elementNext.text + "\")";
@@ -179,7 +175,34 @@ var menu =
           movenext += `this.addProp(userProfile,"${element.parVar}",stepResult);            ${s}\n            break;\n`;
           break;
         case "DIALOG":
-          output += `   return await step.replaceDialog("${element.parPar}");`;
+          output += `//ADD TO THE DIALOG STACK
+          dialogStack.push({step:${n},dialog:"${element.dialog}"});
+          ${CONTEXT_NEXT}`;
+          //SEARCH FOR START DIALOG
+          var newN=-1;
+          for (let index = 0; index < flow.length; index++) {
+            const elementDialog = flow[index];
+            if (elementDialog.type=="DIALOGSTART" && elementDialog.dialog==element.parAPI)
+            {
+              nextElem = searchArray(flow, elementDialog.next[0].to, "key", element.parAPI);
+              newN=nextElem.newIndex;
+            }
+          }
+          movenext+=`              userProfile.step=${newN};
+          break;\n`;
+          break;
+        case "DIALOGSTART":
+          output += `${CONTEXT_NEXT}`;
+          movenext+=`              userProfile.step=${n};
+          break;\n`;
+          break;
+        case "DIALOGEND":
+          output += `${CONTEXT_NEXT}`;
+          movenext+=`//RESTORE FROM THE DIALOG STACK
+          var st=dialogStack.pop();
+          userProfile.step=st.step;
+          break;\n`;
+          break;
         case "LUIS":
           output += `   return await this.STEP_${element.newIndex}(step);\n`;
           functions += `\n${FUNCTION_DECLARATION}STEP_${element.newIndex}(${STEP_DECLARATION}step) //${menu.comment(element)}
@@ -200,10 +223,10 @@ var menu =
           var s = `userProfile.step=${element.newIndex};\n`;
           for (let i = 0; i < element.next.length; i++) {
             const elementNext = element.next[i];
-            var t = searchArray(flow, elementNext.to, "key").newIndex;
+            var t = searchArray(flow, elementNext.to, "key",element.dialog).newIndex;
             s += "if (topIntent==await this.ReplacePragmas(step,\"" + elementNext.text + "\")) userProfile.step=" + t + ";\n";
           }
-          movenext += `var luisRecognizer=LuisRec("${element.parPar}","${element.parKey}","${element.parURL}");
+          movenext += `var luisRecognizer=this.LuisRec("${element.parPar}","${element.parKey}","${element.parURL}");
             ${LUIS_RECOGNIZE}
             this.addProp(userProfile,"${element.parVar}",stepResult);
             ${s}
@@ -217,7 +240,7 @@ var menu =
           functions += `${PROMPT_CONVERSION}
           return await step.${PROMPT_FUNCTION}(NAME_PROMPT, promptoptions );
           }\n`;
-          movenext += `var qnaMaker=QnA("${element.parKey}", "${element.parPar}", "${element.parURL}");
+          movenext += `var qnaMaker=this.QnA("${element.parKey}", "${element.parPar}", "${element.parURL}");
         ${QNA_RESULTS}
             await ${SEND_ACTIVITY}(res);
           }
@@ -265,8 +288,8 @@ var menu =
             f = element.next[0].to;
             t = element.next[1].to;
           }
-          t = searchArray(flow, t, "key").newIndex;
-          f = searchArray(flow, f, "key").newIndex;
+          t = searchArray(flow, t, "key",element.dialog).newIndex;
+          f = searchArray(flow, f, "key",element.dialog).newIndex;
           output += `${CONTEXT_NEXT}`;
           movenext += `expression=await this.ReplacePragmas(step, "${replaceAll(element.parCon, "\"", "\\\"")}");
             if (this.evalCondition(expression))
@@ -277,7 +300,6 @@ var menu =
           break;
         default:
           output += `   return await this.STEP_${element.newIndex}(step);\n`;
-          //console.log("STEP_${element.newIndex}");
           functions += `\n${FUNCTION_DECLARATION}STEP_${element.newIndex}(${STEP_DECLARATION}step) //${menu.comment(element)}
             {
               var text=await this.ReplacePragmas(step,STRING_${element.newIndex});
@@ -299,7 +321,6 @@ var menu =
     template = template.replace("###STEPS###", output);
     var w = window.open("", "");
     w.document.write("<pre>" + template + "</pre>");
-    console.log(output);
   },
   new: function () {
     myDiagram.model = go.Model.fromJson("{}")

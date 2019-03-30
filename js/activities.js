@@ -775,6 +775,9 @@ function replaceAll(text, search, replacement) {
   return text.replace(new RegExp(search, 'g'), replacement);
 };
 function searchArray(myArray, nameKey, prop,dialog) {
+  //console.log("SEARCHARRAY")
+  //console.log(myArray)
+  console.log(nameKey + "," + dialog)
   if (!dialog)
     dialog=Tab.tabs[Tab.selected];
   for (var i = 0; i < myArray.length; i++) {

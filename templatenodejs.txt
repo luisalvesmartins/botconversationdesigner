@@ -24,6 +24,8 @@ const MAIN_DIALOG = 'mainDialog';
 const NAME_PROMPT = 'namePrompt';
 const CHOICE_PROMPT = 'choicePrompt';
 
+var dialogStack=[];
+
 // TEXT STRINGS
 ###TEXTSTRINGS###
 

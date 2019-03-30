@@ -24,7 +24,7 @@ require('dotenv').config({ path: ENV_FILE });
 // See https://aka.ms/about-bot-file to learn more about .bot file its use and bot configuration.
 var BOT_FILE = path.join(__dirname, (process.env.botFilePath || ''));
 console.log(BOT_FILE)
-//BOT_FILE+="\\nodejs.bot";
+BOT_FILE+="\\nodejs.bot";
 let botConfig;
 try {
     // Read bot configuration from .bot file.

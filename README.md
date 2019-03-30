@@ -56,7 +56,6 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
 ## Implementation backlog:
 - EXPORT TO Node missing features:
     - API
-    - DIALOG (runs on the html but is not yet included on the export)
     - Translation (runs on the html but is not yet included on the export)
     - Application Insights configurations
 - EXPORT TO C# missing features: (will implement only if there is demand)
