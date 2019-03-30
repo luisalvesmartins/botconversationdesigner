@@ -1,4 +1,3 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 // DEPLOYMENT INSTRUCTIONS:
@@ -8,7 +7,7 @@
 // 3. RUN THE BOT
 //
 // MISSING FEATURES:
-// TYPE: card,API,DIALOG
+// TYPE: card,API,DIALOG,REST CALL,Translation
 
 using System;
 using System.Collections.Generic;
