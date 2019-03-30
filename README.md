@@ -6,6 +6,15 @@ Create the Microsoft Bot Framework code (node or c#) automatically from the desi
 
 Play with it here: https://lambot.blob.core.windows.net/github/botconversationdesigner/index.html
 
+Bot conversation designers can be classified in this groups:
+- Draft and simulate the experience (“look how it will be”)
+- Design and run the conversation (“all in one”) 
+- Design the conversation and generate the code (“design and refine”)
+- Design the conversation based on “intelligence” ("build itself")
+- Design the conversation from a business perspective (“no IT”)
+
+This project addresses points 3 and 5 of this list. Point 2 is addressed by using this project together with [BotEngine](https://github.com/luisalvesmartins/botengine).
+
 
 ## Features
 - No need to deploy a bot to use the designer, run it on the browser
