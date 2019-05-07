@@ -323,7 +323,9 @@ var menu =
     w.document.write("<pre>" + template + "</pre>");
   },
   new: function () {
+    Tab.init();
     myDiagram.model = go.Model.fromJson("{}")
+    Tab.dialogs=model.dialogs;
   },
   save: function () {
     var flow = JSON.stringify(LoadAndSave.prepareSave());
