@@ -55,7 +55,7 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
     - If - Evaluates condition, flows to true or false branches
     - Message - Displays a message
     - LUIS - Calls LUIS Service
-    - QNA - Calls QNA Service
+    - QNA - Calls QNA Service, designer has multiturn capabilities, not yet on exported code
     - Card - Presents a Card
     - API - Calls an API
     - Dialog - Jumps to another Dialog

@@ -7,7 +7,7 @@
 // 3. RUN THE BOT
 //
 // MISSING FEATURES:
-// TYPE: API,Translation, AppInsights
+// TYPE: API,Translation, AppInsights, QnA multiturn
 
 // Import required Bot Builder
 const { ComponentDialog, WaterfallDialog, TextPrompt, ChoicePrompt } = require('botbuilder-dialogs');

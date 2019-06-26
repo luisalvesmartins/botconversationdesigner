@@ -7,7 +7,7 @@
 // 3. RUN THE BOT
 //
 // MISSING FEATURES:
-// TYPE: card,API,DIALOG,REST CALL,Translation
+// TYPE: card,API,DIALOG,REST CALL,Translation, QnA multiturn
 
 using System;
 using System.Collections.Generic;

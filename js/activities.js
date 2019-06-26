@@ -444,6 +444,7 @@ var Bot = {
           LUISDebug(a, LUISResult);
         }
       }
+      var extension=null;
       if (a.type == "QNA") {
         //DO THE CALL
         var QNAResult = undefined;
@@ -462,6 +463,41 @@ var Bot = {
         }
         if (QNAResult) {
           topScoringIntent = QNAResult.answers[0].answer;
+
+          if (QNAResult.answers[0].context){
+
+            // console.log("QNARESULT")
+            // console.log(QNAResult);
+            var prompts=QNAResult.answers[0].context.prompts;
+            // console.log("PROMPTS")
+            // console.log(prompts)
+
+            var buttons=[];
+            for (let index = 0; index < prompts.length; index++) {
+              const element = prompts[index].displayText;
+              buttons.push(
+                {
+                  "title": element,
+                  "type": "imBack",
+                  "value": element
+                }
+              );
+            }
+
+            if (buttons.length>0)
+              extension={"attachments":
+                [
+                  {
+                    "content": {
+                      "buttons": buttons,
+                      "text": topScoringIntent
+                    },
+                    "contentType": "application/vnd.microsoft.card.hero"
+                  }
+                ]
+              };
+          }
+
           if (a.parVar) {
             Bot.userData[a.parVar + "_Result"] = topScoringIntent;
           }
@@ -483,7 +519,14 @@ var Bot = {
           text = topScoringIntent;
         }
         if (a.type == "QNA") {
-          messages.push({ type: "MESSAGE", text: topScoringIntent });
+          if (extension!=null)
+          {
+            messages.push({ type: "MESSAGE", text:"",extension:extension });
+            Bot.sendBotMessage(messages);
+            return;
+          }
+          else
+            messages.push({ type: "MESSAGE", text: topScoringIntent });
         }
         if (a.type=="REST")
         {
@@ -664,7 +707,7 @@ var Bot = {
       const flowItem = flowItems[i];
       var attachmentLayout="";
 
-      var extension=null;
+      var extension=flowItem.extension;
       switch (flowItem.type) {
         case "CARD":
           switch (flowItem.parCar) {
@@ -777,7 +820,7 @@ function replaceAll(text, search, replacement) {
 function searchArray(myArray, nameKey, prop,dialog) {
   //console.log("SEARCHARRAY")
   //console.log(myArray)
-  console.log(nameKey + "," + dialog)
+  //console.log(nameKey + "," + dialog)
   if (!dialog)
     dialog=Tab.tabs[Tab.selected];
   for (var i = 0; i < myArray.length; i++) {
