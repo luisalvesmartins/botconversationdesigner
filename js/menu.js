@@ -46,7 +46,7 @@ var menu =
       var GETUSERPROFILE = "var userProfile = await UserProfileAccessor.GetAsync(step.Context, () => null);\n";
       var SUGGESTEDACTIONS = "suggestActionsOptions";
       var LUIS_RECOGNIZE = "var results = await luisRecognizer.RecognizeAsync(step.Context,new CancellationToken());var topIntent = LuisRecognizer.TopIntent(results);";
-      var QNA_RESULTS = "var qnaResults = await qnaMaker.GetAnswersAsync(step.Context); if (qnaResults.Length>0) {var res=qnaResults[0].Answer;";
+      var QNA_RESULTS = "var qnaResults = await qnaMaker.GetAnswersAsync(step.Context);\n if (qnaResults.Length>0) {var res=qnaResults[0].Answer;";
       var ARRAY_PREFIX = "new string[]{";
       var ARRAY_SUFIX = "}";
       var CHOICE_FUNCTION = "CHOICE_PROMPT";
@@ -325,7 +325,7 @@ var menu =
   new: function () {
     Tab.init();
     myDiagram.model = go.Model.fromJson("{}")
-    Tab.dialogs=model.dialogs;
+    Tab.dialogs={};
   },
   save: function () {
     var flow = JSON.stringify(LoadAndSave.prepareSave());
