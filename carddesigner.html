@@ -1,0 +1,451 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Bot Conversation Designer</title>
+    <meta charset="UTF-8"/>
+<style>
+</style>
+    <link href="css/style.css" rel="stylesheet" />
+    <script src="js/offlinebotchatv4.js"></script>
+    <script src="js/jquery-3.1.1.min.js"></script>
+    <script src="js/cardFactory.js"></script>
+</head>
+<body onload="init()">
+        <div id="header"><b>card</b>designer</div>
+    <div id="main">
+            <div id="left2" class="panel">
+                <div id="botWC" class=largeChild></div>
+            </div>
+            <div id="center" class="panel">
+                <div class=largeChild style="position:relative">
+                    <select id="selCardType" onchange="Card.onChange()">
+                      <option>adaptiveCard</option>
+                      <option>animationCard</option>
+                      <option>audioCard</option>
+                      <option>heroCard</option>
+                      <option>receiptCard</option>
+                      <option>oauthCard</option>
+                      <option>signinCard</option>
+                      <option>thumbnailCard</option>
+                      <option>videoCard</option>
+                    </select>
+                    <div id="card" style="border:solid 2px gray; width:300px;height:300px"></div>
+                    <button onclick="ref()">REF</button>
+                </div>
+
+                <div id="codenode"></div>
+
+            </div>
+
+        </div>
+        <div id="footer">2019 Luis Alves Martins - <a href="http://github.com/luisalvesmartins">http://github.com/luisalvesmartins</a></div>
+    
+<script>
+$("#botWC").on("mouseup",myClick);
+
+function myClick(){
+  var t=event.srcElement;
+  console.log("T")
+  var initT=t;
+  while (t.className.indexOf("wc-card")<0 && t.id!="botWC")
+  {
+    console.log(t.className);
+    t=t.parentElement;
+  }
+  if (t.id=="botWC")
+    return
+  console.log("ELEMENT:" + initT.tagName);
+  if (initT.tagName=="P" && !Editing){
+    console.log(initT.innerHTML)
+    var replaceWith = $('<input name="temp" type="text" />'),
+    connectWith = $('input[name="hiddenField"]');
+
+    $(initT).inlineEdit(replaceWith, connectWith);
+
+    //initT.innerHTML="LALA"
+  }
+  console.log(t.className);
+}
+
+var Editing=false;
+
+$.fn.inlineEdit = function(replaceWith, connectWith) {
+
+$(this).hover(function() {
+    $(this).addClass('hover');
+}, function() {
+    $(this).removeClass('hover');
+});
+
+$(this).click(function() {
+if (!Editing){
+  Editing=true;
+
+    var elem = $(this);
+
+    var replaceWith = $('<input name="temp" type="text" value="' + elem.text() + '"/>');
+    var connectWith = $('input[name="hiddenField"]');
+
+    elem.hide();
+    elem.after(replaceWith);
+    replaceWith.focus();
+
+    replaceWith.blur(function() {
+
+        if ($(this).val() != "") {
+            connectWith.val($(this).val()).change();
+            elem.text($(this).val());
+        }
+
+        $(this).remove();
+        elem.show();
+        Editing=false;
+    });
+    replaceWith.on("keyup",function(event){
+      if (event.keyCode==13){
+        replaceWith.blur();
+      }
+    })
+  }
+});
+};
+
+var Card={
+  messageNumber:0,
+  onChange:function(){
+    Card.render($("#selCardType").val(),"INIT");
+  },
+  refresh:function(){
+    Card.render($("#selCardType").val(),"REFRESH");
+    exportnode
+  },
+  render:function(cardType,mode){
+    var options="";
+    var attachments=null;
+    switch (cardType) {
+      case "adaptiveCard":
+      //card
+        break;
+      case "animationCard": //title, media, buttons, other
+        if (mode=="INIT"){
+          options=
+            addPart("divTitle","Title","+","TXT") +
+            addPart("divMedia","Media","+","MED") +
+            addPart("divButtons","Buttons","+","BUT");
+        }
+        break;
+      case "audioCard": //title, media, buttons, other
+        if (mode=="INIT"){
+          options=
+            addPart("divTitle","Title","+","TXT") +
+            addPart("divMedia","Media","+","MED") +
+            addPart("divButtons","Buttons","+","BUT");
+        }
+        if (mode=="REFRESH"){
+          var title=$("#divTitle").text();
+          attachments=CardFactory.audioCard(
+            title,
+            [""], 
+            Card.getButtons("divButtons"));
+        }
+        break;
+      case "heroCard": //title, media, buttons, other
+        if (mode=="INIT"){
+          options=
+            addPart("divImg","Image","+","IMG") +
+            addPart("divTitle","Title","+","TXT") +
+            addPart("divText","Text","+","TXT") +
+            addPart("divButtons","add button heroCard","+","BUT");
+        }
+        if (mode=="REFRESH"){
+          var title=$("#divTitle").text();
+          var text=$("#divText").text();
+          attachments=CardFactory.heroCard(
+            title,
+            text, 
+            Card.getImages("divImg"), 
+            Card.getButtons("divButtons"));
+        }
+      break;
+      case "receiptCard": //card
+        if (mode=="INIT"){
+          options= addPart("divTitle","Title","+","TXT");
+        }
+        if (mode=="REFRESH"){
+          var title=$("#divTitle").text();
+          attachments=CardFactory.receiptCard(title);
+        }
+        break;
+      case "oauthCard": //connectionName, title, text
+      if (mode=="INIT"){
+          options=
+            addPart("divConn","ConnectionName","+","TXT") +
+            addPart("divTitle","Title","+","TXT") +
+            addPart("divText","Text","+","TXT");
+        }
+        if (mode=="REFRESH"){
+          var conn=$("#divConn").text();
+          var title=$("#divTitle").text();
+          var text=$("#divText").text();
+          attachments=CardFactory.oauthCard(
+            conn,
+            title,
+            text);
+        }
+        break;
+      case "signinCard": //title, url, text
+        if (mode=="INIT"){
+          options=
+            addPart("divTitle","Title","+","TXT") +
+            addPart("divUrl","URL","+","TXT") +
+            addPart("divText","Text","+","TXT");
+        }
+        if (mode=="REFRESH"){
+          var url=$("#divUrl").text();
+          var title=$("#divTitle").text();
+          var text=$("#divText").text();
+          attachments=CardFactory.signinCard(
+            title,
+            url,
+            text);
+        }
+        break;
+      case "thumbnailCard": //title, text, images, buttons
+        if (mode=="INIT"){
+          options=
+            addPart("divImg","Image","+","IMG") +
+            addPart("divTitle","Title","+","TXT") +
+            addPart("divText","Text","+","TXT") +
+            addPart("divButtons","add button thumbnailCard","+","BUT");
+        }
+        if (mode=="REFRESH"){
+          var title=$("#divTitle").text();
+          var text=$("#divText").text();
+          attachments=CardFactory.thumbnailCard(
+            title,
+            text, 
+            Card.getImages("divImg"), 
+            Card.getButtons("divButtons"));
+        }
+        break;
+      case "videoCard": //title, media, buttons
+        if (mode=="INIT"){
+          options=
+            addPart("divTitle","Title","+","TXT") +
+            addPart("divMedia","Media","+","MED") +
+            addPart("divButtons","Buttons","+","BUT");
+        }
+        if (mode=="REFRESH"){
+          var title=$("#divTitle").text();
+          attachments=CardFactory.videoCard(
+            title,
+            [""], 
+            Card.getButtons("divButtons"));
+        }
+        break;
+        break;
+      default:
+        break;
+    }
+    if (mode=="INIT"){
+      $("#card").html(options);
+      Card.refresh();
+    }
+    // $('.edit').editable(function(value, settings) {
+    //  console.log(this);
+    //  console.log(value);
+    //  console.log(settings);
+    //  Card.refresh();
+    //  return(value);
+    // },{     
+    //  submit  : 'OK',
+    //  style   : 'inherit'
+    // });
+    if (mode=="REFRESH")
+    {
+      Card.messageNumber++;
+      attachments={attachments:[attachments]}
+      var message={
+          activities:[Object.assign({
+          "conversation": {
+            "id": "something"
+          },
+          "id": Card.messageNumber,
+          "from": {
+            "id": "something",
+            "name": "someone",
+            "role": "bot"
+          },
+          "recipient": {
+            "id": "something",
+            "name": "me",
+            "role": "user"
+          },
+          "text": "",
+          "timestamp": "2018-10-18T15:21:07.82108Z",
+          "type": "message",
+          "channelId": "web"
+        },attachments)]};
+      console.log(JSON.stringify(message))
+
+      DirectLineEmulator.emptyActivity=message;
+    }
+  },
+  addImage(div){
+    $("#" + div).html('<img src="https://cdn0.iconfinder.com/data/icons/robot-avatars-solid/60/041_-_Love_Bot-128.png">');
+    Card.refresh();
+  },
+  addButton(div){
+    var h=$("#" + div).html();
+    $("#" + div).html("<button>button</button>" + h);
+    Card.refresh();
+  },
+  getButtons(div){
+    var buttons=[];
+    for (let i = 0; i < $("#" + div).children().length-1; i++) {
+      const element = $("#" + div).children()[i];
+      buttons.push(
+            { type: ActionTypes.PostBack, title: element.innerHTML, value: element.innerHTML}
+      );
+    }
+    return buttons;
+  },
+  getImages(div){
+    var list=[];
+    for (let i = 0; i < $("#" + div).children().length; i++) {
+      const element = $("#" + div).children()[i];
+      console.log(element.getAttribute("src"));
+      list.push(element.src);
+    }
+    return list;
+  }
+}
+function addPart(div,title,empty,type){
+	var html="<div id=" + div + ">";
+	switch (type){
+	case "IMG":
+		html+='<img width=200px height=200px onclick="Card.addImage(\'' + div + '\')" src="https://cdn0.iconfinder.com/data/icons/robot-avatars-solid/60/041_-_Love_Bot-128.png">';
+		break;
+  case "MED":
+		html+="<img width=200px height=200px/>";
+		break;
+  case "TXT":
+    html+= '<div class="edit">' + title + '</div>';
+    break;
+  case "BUT":
+    html+= '<button onclick="Card.addButton(\'' + div + '\')">' + title + '</button>' + '<button onclick="Card.addButton(\'' + div + '\')">+</button>';
+    break;
+	default:
+		html+= '<div class="edit">UNKNOWN</div>';
+		break;
+	}
+	html+="</div>";
+	return html;
+}
+
+
+
+var DirectLineEmulator;        
+function init()
+{
+  const user = {
+    id: 'Luis',
+    name: 'Luis'
+  };
+  const bot = {
+    id: 'botid',
+    name: 'botname'
+  };
+  const styleOptions = {
+        bubbleBackground: 'rgba(0, 0, 255, .1)',
+        bubbleFromUserBackground: 'rgba(0, 255, 0, .1)',
+        botAvatarInitials: 'Bot',
+        userAvatarInitials: 'User',
+    };
+  window.WebChat.renderWebChat({
+          directLine: window.WebChat.createDirectLine({token:'' }),
+          bot: bot,
+          user: user,
+            styleOptions
+        }, document.getElementById('botWC'));
+
+        document.querySelector('#botWC > *').focus();
+
+  DirectLineEmulator={
+    emptyActivity:{
+        "activities": [],
+        "watermark": "0"
+    },
+    userActivity:function(activity){
+    //Every time the user sends an activity: 
+    console.log("USER ACTIVITY")
+    console.log(activity)
+        Bot.receiveMessage(activity);
+    },
+    getActivity:function(activity){
+    //The bot polls this function every 1000ms, change activity to the message you want to display
+        //console.log("ACTIVITY SENT")
+        return this.emptyActivity;
+    }
+  }
+  //Card.onChange();
+}        
+
+function exportnode(){
+var s=`
+    var msg = new builder.Message(session);
+    msg.attachmentLayout(builder.AttachmentLayout.carousel)
+    msg.attachments([
+        new builder.HeroCard(session)
+            .title("Classic White T-Shirt")
+            .subtitle("100% Soft and Luxurious Cotton")
+            .text("Price is $25 and carried in sizes (S, M, L, and XL)")
+            .images([builder.CardImage.create(session, 'http://petersapparel.parseapp.com/img/whiteshirt.png')])
+            .buttons([
+                builder.CardAction.imBack(session, "buy classic white t-shirt", "Buy")
+            ]),
+        new builder.HeroCard(session)
+            .title("Classic Gray T-Shirt")
+            .subtitle("100% Soft and Luxurious Cotton")
+            .text("Price is $25 and carried in sizes (S, M, L, and XL)")
+            .images([builder.CardImage.create(session, 'http://petersapparel.parseapp.com/img/grayshirt.png')])
+            .buttons([
+                builder.CardAction.imBack(session, "buy classic gray t-shirt", "Buy")
+            ])
+    ]);
+    session.send(msg).endDialog();
+`;
+
+  $("#nodecode").html(s);
+  var op={
+  "indent_size": "4",
+  "indent_char": " ",
+  "max_preserve_newlines": "5",
+  "preserve_newlines": true,
+  "keep_array_indentation": false,
+  "break_chained_methods": false,
+  "indent_scripts": "normal",
+  "brace_style": "collapse",
+  "space_before_conditional": true,
+  "unescape_strings": false,
+  "jslint_happy": false,
+  "end_with_newline": true,
+  "wrap_line_length": "0",
+  "indent_inner_html": false,
+  "comma_first": false,
+  "e4x": false
+}
+console.log(Beautifier(s,op))
+}
+
+</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-135656500-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-135656500-1');
+</script>
+</body>
+</html>
