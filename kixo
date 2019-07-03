@@ -1,9 +1,0 @@
-TRANSLATOR SERVICES:
-
-POST https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&from=en&to=pt-PT
-Content-Type: application/json
-Ocp-Apim-Subscription-Key: e685527c05db4ac9931890455ace9666
-
-[
-    {"Text":"I would really like to drive your car around the block a few times."}
-]
