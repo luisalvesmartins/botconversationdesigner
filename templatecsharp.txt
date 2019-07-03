@@ -1,5 +1,6 @@
 // Licensed under the MIT License.
 
+// USING BOT TEMPLATE 4.3 
 // DEPLOYMENT INSTRUCTIONS:
 // 1. GET FULL NODE PROJECT FROM: https://github.com/luisalvesmartins/botconversationdesigner/tree/master/botcode/csharp
 //    OR FROM HERE: https://lambot.blob.core.windows.net/github/botconversationdesigner/samplecsharp.zip
@@ -7,7 +8,7 @@
 // 3. RUN THE BOT
 //
 // MISSING FEATURES:
-// TYPE: card,API,DIALOG,REST CALL,Translation, QnA multiturn
+// TYPE: card,API,DIALOG,REST CALL,Translation
 
 using System;
 using System.Collections.Generic;
@@ -22,8 +23,11 @@ using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Builder.AI.QnA;
 using Microsoft.Bot.Configuration;
 using Microsoft.Bot.Builder.Dialogs.Choices;
+using System.Net.Http;
+using Newtonsoft.Json;
+using QnAPrompting.Models;
 
-namespace sample
+namespace SampleBot
 {
     /// <summary>
     /// Demonstrates the following concepts:
@@ -41,6 +45,8 @@ namespace sample
 // TEXT STRINGS
 ###TEXTSTRINGS###
 
+        public IStatePropertyAccessor&lt;userState&gt; UserProfileAccessor { get; }
+        protected readonly ILogger Logger;
 
         // Dialog IDs
         /// <summary>
@@ -49,10 +55,10 @@ namespace sample
         /// <param name="botServices">Connected services used in processing.</param>
         /// <param name="botState">The <see cref="UserState"/> for storing properties at user-scope.</param>
         /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> that enables logging and tracing.</param>
-        public MainDialog(IStatePropertyAccessor&lt;userState> userProfileStateAccessor, ILoggerFactory loggerFactory)
+        public MainDialog(UserState _userState, ILogger&lt;MainDialog&gt; logger)
             : base(nameof(MainDialog))
         {
-            UserProfileAccessor = userProfileStateAccessor ?? throw new ArgumentNullException(nameof(userProfileStateAccessor));
+            Logger = logger;
 
             // Add control flow dialogs
             AddDialog(new WaterfallDialog(MAIN_DIALOG,new WaterfallStep[]
@@ -63,9 +69,10 @@ namespace sample
                     ));
             AddDialog(new TextPrompt(NAME_PROMPT));
             AddDialog(new ChoicePrompt(CHOICE_PROMPT) { Style=ListStyle.SuggestedAction });
-        }
 
-        public IStatePropertyAccessor&lt;userState> UserProfileAccessor { get; }
+            UserProfileAccessor = _userState.CreateProperty&lt;userState&gt;(nameof(_userState));
+
+        }
 
         private async Task&lt;DialogTurnResult> MAINSTEP(WaterfallStepContext step, CancellationToken cancellationToken)
         {
@@ -165,6 +172,28 @@ namespace sample
             Q.Hostname = Hostname;
             return new QnAMaker(Q);
         }
+        public async Task&lt;QnAResult[]&gt; QueryQnAServiceAsync(string query, string EndpointKey, string KnowledgeBaseId, string Host)
+        {
+            var requestUrl = $"{Host}/knowledgebases/{KnowledgeBaseId}/generateanswer";
+            var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
+            var jsonRequest = JsonConvert.SerializeObject(
+                new
+                {
+                    question = query,
+                }, Formatting.None);
+
+            request.Headers.Add("Authorization", $"EndpointKey {EndpointKey}");
+            request.Content = new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json");
+            HttpClient _httpClient = new HttpClient();
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var contentString = await response.Content.ReadAsStringAsync();
+
+            var result = JsonConvert.DeserializeObject&lt;QnAResultList&gt;(contentString);
+
+            return result.Answers;
+        }
         PromptOptions suggestActionsOptions(string prompt,string[] choices)
         {
             List&lt;Choice> LC = new List&lt;Choice>();
@@ -193,5 +222,90 @@ namespace sample
             }
             return stepResult;
         }
+        private async Task qnaResultsDisplay(WaterfallStepContext step, int thisStep, userState userProfile, QnAResult[] qnaResults, CancellationToken cancellationToken)
+        {
+            if (qnaResults.Length > 0)
+            {
+                var res = qnaResults[0].Answer;
+                var prompts = qnaResults[0].Context?.Prompts;
+
+                if (prompts.Length > 0)
+                {
+                    var buttons = new List&lt;Choice>();
+                    for (int i = 0; i < prompts.Length; i++)
+                    {
+                        CardAction CA = new CardAction() { Type = ActionTypes.ImBack, Title = prompts[i].DisplayText, Value = prompts[i].DisplayText };
+                        buttons.Add(new Choice { Action = CA, Value = prompts[i].DisplayText });
+                    }
+
+                    var options = new PromptOptions()
+                    {
+                        Prompt = MessageFactory.Text(res),
+                        Style = ListStyle.HeroCard,
+                        Choices = buttons,
+                    };
+
+                    await step.PromptAsync(CHOICE_PROMPT, options, cancellationToken);
+                    userProfile.step = thisStep;
+                }
+                else
+                {
+                    await step.Context.SendActivityAsync(res);
+                }
+            }
+            else
+            {
+                await step.Context.SendActivityAsync("Sorry, didn't find answers in the KB.");
+            }
+        }
+
+    }
+
+    public class userState
+    {
+        public int step { get; set; }
+        public Dictionary&lt;string, string&gt; props;
+    }
+}
+
+namespace QnAPrompting.Models
+{
+    public class QnAResultList
+    {
+        public QnAResult[] Answers { get; set; }
+    }
+    public class QnAResult
+    {
+        public string[] Questions { get; set; }
+
+        public string Answer { get; set; }
+
+        public double Score { get; set; }
+
+        public int Id { get; set; }
+
+        public string Source { get; set; }
+
+        public QnAMetadata[] Metadata { get; }
+
+        public QnAContext Context { get; set; }
+    }
+    public class QnAMetadata
+    {
+        public string Name { get; set; }
+
+        public string Value { get; set; }
+    }
+    public class QnAContext
+    {
+        public QnAPrompts[] Prompts { get; set; }
+    }
+    public class QnAPrompts
+    {
+        public int DisplayOrder { get; set; }
+
+        public int QnaId { get; set; }
+
+        public string DisplayText { get; set; }
     }
 }

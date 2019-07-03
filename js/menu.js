@@ -46,7 +46,7 @@ var menu =
       var GETUSERPROFILE = "var userProfile = await UserProfileAccessor.GetAsync(step.Context, () => null);\n";
       var SUGGESTEDACTIONS = "suggestActionsOptions";
       var LUIS_RECOGNIZE = "var results = await luisRecognizer.RecognizeAsync(step.Context,new CancellationToken());var topIntent = LuisRecognizer.TopIntent(results);";
-      var QNA_RESULTS = "var qnaResults = await qnaMaker.GetAnswersAsync(step.Context);\n if (qnaResults.Length>0) {var res=qnaResults[0].Answer;";
+      var QNA_RESULTS = "await qnaResultsDisplay(step, ACTUAL_STEP, userProfile, qnaResults, cancellationToken);";
       var ARRAY_PREFIX = "new string[]{";
       var ARRAY_SUFIX = "}";
       var CHOICE_FUNCTION = "CHOICE_PROMPT";
@@ -240,16 +240,10 @@ var menu =
           functions += `${PROMPT_CONVERSION}
           return await step.${PROMPT_FUNCTION}(NAME_PROMPT, promptoptions );
           }\n`;
-          movenext += `var qnaMaker=this.QnA("${element.parKey}", "${element.parPar}", "${element.parURL}");
-        ${QNA_RESULTS}
-            await ${SEND_ACTIVITY}(res);
-          }
-          else
-            await ${SEND_ACTIVITY}("Sorry, didn't find answers in the KB.");
-
-          this.addProp(userProfile,"${element.parVar}",stepResult);
-
+          movenext += `var qnaResults = await QueryQnAServiceAsync(stepResult, "${element.parKey}", "${element.parPar}", "${element.parURL}");
           userProfile.step=${n};
+          ${QNA_RESULTS.replace("ACTUAL_STEP",element.newIndex)}
+          this.addProp(userProfile,"${element.parVar}",stepResult);
           break;\n`;
           break;
         case "MESSAGE":

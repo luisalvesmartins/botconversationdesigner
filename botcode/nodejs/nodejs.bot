@@ -1,15 +1,18 @@
 {
     "name": "sample",
+    "description": "",
     "services": [
         {
             "type": "endpoint",
-            "name": "development",
-            "endpoint": "http://localhost:3978/api/messages",
             "appId": "",
             "appPassword": "",
-            "id": "1"
-        }
+            "endpoint": "http://localhost:3978/api/messages",
+            "id": "1",
+            "name": "development"
+        },
     ],
     "padlock": "",
-    "version": "2.0"
+    "version": "2.0",
+    "overrides": null,
+    "path": "C:\\Source\\botconversationdesigner\\botcode\\nodejs\\nodejs.bot"
 }
