@@ -524,8 +524,8 @@ var Bot = {
             at.push(
               {
               "content": {
-                "title": element["Title"],
-                "text": element["Content"]
+                "title": element[a.parAPI],
+                "text": element[a.parTyp]
               },
               "contentType": "application/vnd.microsoft.card.hero"
               }
