@@ -29,8 +29,9 @@ var menu =
       var ARRAY_PREFIX = "[";
       var ARRAY_SUFIX = "]";
       var CHOICE_FUNCTION = "NAME_PROMPT";
+      var DIALOG_PUSH="dialogStack.push({step:ELEMENT_STEP,dialog:\"ELEMENT_DIALOG\"});";
 
-      menu.exportcore(template, CONTEXT_NEXT, STRING_DECLARATION, SEND_ACTIVITY, STEP_DECLARATION, FUNCTION_DECLARATION, PROMPT_FUNCTION, PROMPT_CONVERSION, GETUSERPROFILE, SUGGESTEDACTIONS, LUIS_RECOGNIZE, QNA_RESULTS, ARRAY_PREFIX, ARRAY_SUFIX, CHOICE_FUNCTION);
+      menu.exportcore(template, CONTEXT_NEXT, STRING_DECLARATION, SEND_ACTIVITY, STEP_DECLARATION, FUNCTION_DECLARATION, PROMPT_FUNCTION, PROMPT_CONVERSION, GETUSERPROFILE, SUGGESTEDACTIONS, LUIS_RECOGNIZE, QNA_RESULTS, ARRAY_PREFIX, ARRAY_SUFIX, CHOICE_FUNCTION,DIALOG_PUSH);
 
     });
   },
@@ -50,14 +51,15 @@ var menu =
       var ARRAY_PREFIX = "new string[]{";
       var ARRAY_SUFIX = "}";
       var CHOICE_FUNCTION = "CHOICE_PROMPT";
+      var DIALOG_PUSH="dialogStack.push(new DialogStep {step=ELEMENT_STEP,dialog=\"ELEMENT_DIALOG\"});";
 
-      menu.exportcore(template, CONTEXT_NEXT, STRING_DECLARATION, SEND_ACTIVITY, STEP_DECLARATION, FUNCTION_DECLARATION, PROMPT_FUNCTION, PROMPT_CONVERSION, GETUSERPROFILE, SUGGESTEDACTIONS, LUIS_RECOGNIZE, QNA_RESULTS, ARRAY_PREFIX, ARRAY_SUFIX, CHOICE_FUNCTION);
+      menu.exportcore(template, CONTEXT_NEXT, STRING_DECLARATION, SEND_ACTIVITY, STEP_DECLARATION, FUNCTION_DECLARATION, PROMPT_FUNCTION, PROMPT_CONVERSION, GETUSERPROFILE, SUGGESTEDACTIONS, LUIS_RECOGNIZE, QNA_RESULTS, ARRAY_PREFIX, ARRAY_SUFIX, CHOICE_FUNCTION,DIALOG_PUSH);
     });
   },
   comment: function (element) {
     return element.type + '-' + replaceAll(element.text, '\n', '') + '-' + replaceAll(element.dialog, '\n', '');
   },
-  exportcore: function (template, CONTEXT_NEXT, STRING_DECLARATION, SEND_ACTIVITY, STEP_DECLARATION, FUNCTION_DECLARATION, PROMPT_FUNCTION, PROMPT_CONVERSION, GETUSERPROFILE, SUGGESTEDACTIONS, LUIS_RECOGNIZE, QNA_RESULTS, ARRAY_PREFIX, ARRAY_SUFIX, CHOICE_FUNCTION) {
+  exportcore: function (template, CONTEXT_NEXT, STRING_DECLARATION, SEND_ACTIVITY, STEP_DECLARATION, FUNCTION_DECLARATION, PROMPT_FUNCTION, PROMPT_CONVERSION, GETUSERPROFILE, SUGGESTEDACTIONS, LUIS_RECOGNIZE, QNA_RESULTS, ARRAY_PREFIX, ARRAY_SUFIX, CHOICE_FUNCTION,DIALOG_PUSH) {
     var flow = LoadAndSave.prepareSave().flow;
     //ORDER ELEMENTS
     var startElement = searchArray(flow, "START", "type");
@@ -175,9 +177,11 @@ var menu =
           movenext += `this.addProp(userProfile,"${element.parVar}",stepResult);            ${s}\n            break;\n`;
           break;
         case "DIALOG":
-          output += `//ADD TO THE DIALOG STACK
-          dialogStack.push({step:${n},dialog:"${element.dialog}"});
+          output += `//ADD TO THE DIALOG STACK\n
+          ${DIALOG_PUSH.replace("ELEMENT_STEP",n).replace("ELEMENT_DIALOG",element.dialog)}
           ${CONTEXT_NEXT}`;
+          //dialogStack.push({step:${n},dialog:"${element.dialog}"});
+
           //SEARCH FOR START DIALOG
           var newN=-1;
           for (let index = 0; index < flow.length; index++) {
@@ -199,8 +203,7 @@ var menu =
         case "DIALOGEND":
           output += `${CONTEXT_NEXT}`;
           movenext+=`//RESTORE FROM THE DIALOG STACK
-          var st=dialogStack.pop();
-          userProfile.step=st.step;
+          userProfile.step=dialogStack.pop().step;
           break;\n`;
           break;
         case "LUIS":
@@ -243,6 +246,19 @@ var menu =
           movenext += `var qnaResults = await QueryQnAServiceAsync(stepResult, "${element.parKey}", "${element.parPar}", "${element.parURL}");
           userProfile.step=${n};
           ${QNA_RESULTS.replace("ACTUAL_STEP",element.newIndex)}
+          this.addProp(userProfile,"${element.parVar}",stepResult);
+          break;\n`;
+          break;
+        case "SEARCH":
+          output += `   return await this.STEP_${element.newIndex}(step);\n`;
+          functions += `\n${FUNCTION_DECLARATION}STEP_${element.newIndex}(${STEP_DECLARATION}step) //${menu.comment(element)}
+          {\n`;
+          functions += `var text=await this.ReplacePragmas(step,STRING_${element.newIndex});\n`;
+          functions += `${PROMPT_CONVERSION}
+          return await step.${PROMPT_FUNCTION}(NAME_PROMPT, promptoptions );
+          }\n`;
+          movenext += `await SearchQuery(step, "${element.parTx0}", "${element.parKey}", "${element.parTx1}", "${element.parAPI}", "${element.parTyp}", "${element.parPar}", stepResult);
+          userProfile.step=${n};
           this.addProp(userProfile,"${element.parVar}",stepResult);
           break;\n`;
           break;

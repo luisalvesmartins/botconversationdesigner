@@ -26,18 +26,22 @@ using Microsoft.Bot.Builder.Dialogs.Choices;
 using System.Net.Http;
 using Newtonsoft.Json;
 using QnAPrompting.Models;
+using Microsoft.Azure.Search;
+using Microsoft.Azure.Search.Models;
 
 namespace SampleBot
 {
-    /// <summary>
+    /// &lt;summary>
     /// Demonstrates the following concepts:
     /// - Use a subclass of ComponentDialog to implement a multi-turn conversation
     /// - Use a Waterflow dialog to model multi-turn conversation flow
     /// - Use custom prompts to validate user input
     /// - Store conversation and user state.
-    /// </summary>
+    /// &lt;/summary>
     public class MainDialog : ComponentDialog
     {
+        public DialogStack dialogStack=new DialogStack();
+
         public string MAIN_DIALOG = "mainDialog";
         public string NAME_PROMPT = "namePrompt";
         public string CHOICE_PROMPT = "choicePrompt";
@@ -49,12 +53,12 @@ namespace SampleBot
         protected readonly ILogger Logger;
 
         // Dialog IDs
-        /// <summary>
-        /// Initializes a new instance of the <see cref="GreetingDialog"/> class.
-        /// </summary>
-        /// <param name="botServices">Connected services used in processing.</param>
-        /// <param name="botState">The <see cref="UserState"/> for storing properties at user-scope.</param>
-        /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> that enables logging and tracing.</param>
+        /// &lt;summary>
+        /// Initializes a new instance of the &lt;see cref="GreetingDialog"/> class.
+        /// &lt;/summary>
+        /// &lt;param name="botServices">Connected services used in processing.&lt;/param>
+        /// &lt;param name="botState">The &lt;see cref="UserState"/> for storing properties at user-scope.&lt;param>
+        /// &lt;param name="loggerFactory">The &lt;see cref="ILoggerFactory"/> that enables logging and tracing.&lt;/param>
         public MainDialog(UserState _userState, ILogger&lt;MainDialog&gt; logger)
             : base(nameof(MainDialog))
         {
@@ -232,7 +236,7 @@ namespace SampleBot
                 if (prompts.Length > 0)
                 {
                     var buttons = new List&lt;Choice>();
-                    for (int i = 0; i < prompts.Length; i++)
+                    for (int i = 0; i &lt; prompts.Length; i++)
                     {
                         CardAction CA = new CardAction() { Type = ActionTypes.ImBack, Title = prompts[i].DisplayText, Value = prompts[i].DisplayText };
                         buttons.Add(new Choice { Action = CA, Value = prompts[i].DisplayText });
@@ -258,6 +262,35 @@ namespace SampleBot
                 await step.Context.SendActivityAsync("Sorry, didn't find answers in the KB.");
             }
         }
+        public async Task SearchQuery(WaterfallStepContext step, string searchServiceName, string ServiceKey, string indexName, string fieldTitle, string fieldText, string filter, string searchText)
+        {
+            SearchServiceClient serviceClient = new SearchServiceClient(searchServiceName, new SearchCredentials(ServiceKey));
+            ISearchIndexClient indexClient = serviceClient.Indexes.GetClient(indexName);
+
+            SearchParameters parameters =
+                new SearchParameters()
+                {
+                    //Filter = "Rooms/any(r: r/BaseRate lt 100)",
+                    Select = new[] { "*" }
+                };
+
+            var results = indexClient.Documents.Search(searchText, parameters);
+
+            List&lt;Attachment> attachments=new List&lt;Attachment>();
+            var reply = MessageFactory.Attachment(attachments);
+            reply.AttachmentLayout = AttachmentLayoutTypes.Carousel;
+            for (int i = 0; i &lt; results.Results.Count; i++)
+            {
+                HeroCard plCard1 = new HeroCard()
+                {
+                    Title = results.Results[i].Document[fieldTitle].ToString(),
+                    Text = results.Results[i].Document[fieldText].ToString()
+                };
+                reply.Attachments.Add(plCard1.ToAttachment());
+            }
+
+            await step.Context.SendActivityAsync(reply);
+        }
 
     }
 
@@ -265,6 +298,24 @@ namespace SampleBot
     {
         public int step { get; set; }
         public Dictionary&lt;string, string&gt; props;
+    }
+    public class DialogStack {
+        List&lt;DialogStep> stack=new List&lt;DialogStep>();
+        public void push(DialogStep ob)
+        {
+            stack.Add(ob);
+        }
+        public DialogStep pop()
+        {
+            DialogStep o = stack[stack.Count - 1];
+            stack.RemoveAt(stack.Count - 1);
+            return o;
+        }
+    };
+    public class DialogStep
+    {
+        public int step{ get; set; }
+        public string dialog { get; set; }
     }
 }
 

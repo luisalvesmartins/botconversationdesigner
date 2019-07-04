@@ -503,7 +503,44 @@ var Bot = {
           }
         }
       }
+      if (a.type == "SEARCH") {
+        //DO THE CALL
+        var SearchResult = undefined;
+        try {
+          var url = "https://" + a.parTx0 + ".search.windows.net/indexes/" + a.parTx1 + "/docs?search=" + encodeURI(userText) + "&api-version=2019-05-06&api-key=" + a.parKey;
+          var res = $.get({
+            url: url,
+            async: false
+          }).responseText;
+          SearchResult = JSON.parse(res);
+        } catch (error) {
+          alert("ERROR IN SEARCH PARAMETERS");
+        }
+        //console.log(SearchResult.value);
+        if (SearchResult.value.length>0) {
+          var at=[];
+          for (let index = 0; index < SearchResult.value.length; index++) {
+            const element = SearchResult.value[index];
+            at.push(
+              {
+              "content": {
+                "title": element["Title"],
+                "text": element["Content"]
+              },
+              "contentType": "application/vnd.microsoft.card.hero"
+              }
+            );
+              extension={"attachments":
+                at, "attachmentLayout":"carousel" 
+              };
+            }
+          console.log(extension);
 
+          if (a.parVar) {
+            Bot.userData[a.parVar + "_Result"] = SearchResult;
+          }
+        }
+      }
       var messages = [];
       var bailout=0;
       do {
@@ -527,6 +564,15 @@ var Bot = {
           }
           else
             messages.push({ type: "MESSAGE", text: topScoringIntent });
+        }
+        if (a.type == "SEARCH") {
+          if (extension!=null)
+          {
+            messages.push({ type: "MESSAGE", text:"",extension:extension});
+            Bot.sendBotMessage(messages);
+          }
+          else
+            messages.push({ type: "MESSAGE", text: "No records found" });
         }
         if (a.type=="REST")
         {

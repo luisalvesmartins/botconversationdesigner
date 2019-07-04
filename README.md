@@ -55,7 +55,8 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
     - If - Evaluates condition, flows to true or false branches
     - Message - Displays a message
     - LUIS - Calls LUIS Service
-    - QNA - Calls QNA Service, designer has multiturn capabilities, not yet on exported code
+    - QNA - Calls QNA Service, designer has multiturn capabilities
+    - Search - Calls Azure Search service, displays result as carousel
     - Card - Presents a Card
     - API - Calls an API
     - Dialog - Jumps to another Dialog
@@ -67,10 +68,11 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
     - API
     - Translation (runs on the html but is not yet included on the export)
     - Application Insights configurations
+    - QNA multiturn
+    - Search
 - EXPORT TO C# missing features: (will implement only if there is demand)
     - card
     - API
-    - DIALOG
     - REST CALL
     - Translation
 - (new feature) Enable check if variable is already filled for any activity
