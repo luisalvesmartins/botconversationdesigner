@@ -3,21 +3,22 @@
 // DEPLOYMENT INSTRUCTIONS:
 // 1. GET FULL NODE PROJECT FROM: https://github.com/luisalvesmartins/botconversationdesigner/tree/master/botcode/nodejs
 //    OR FROM HERE: https://lambot.blob.core.windows.net/github/botconversationdesigner/samplenodejs.zip
-// 2. REPLACE THE FILE DIALOGS/MAIN.JS WITH THIS CONTENT 
+// 2. REPLACE THE FILE DIALOGS/mainDialog.JS WITH THIS CONTENT 
 // 3. RUN THE BOT
 //
 // MISSING FEATURES:
-// TYPE: API,Translation, AppInsights, QnA multiturn
+// TYPE: API,Translation, AppInsights
 
 // Import required Bot Builder
-const { ComponentDialog, WaterfallDialog, TextPrompt, ChoicePrompt } = require('botbuilder-dialogs');
+const { DialogSet, DialogTurnStatus, ComponentDialog, WaterfallDialog, TextPrompt, ChoicePrompt } = require('botbuilder-dialogs');
 const { MessageFactory, CardFactory } = require('botbuilder');
 const { LuisRecognizer, QnAMaker } = require('botbuilder-ai');
+
 var request=require('request-promise');
 var jsel=require('jsel');
 
 // Dialog IDs
-const MAIN_DIALOG = 'mainDialog';
+const MAIN_DIALOG = 'MainDialog';
 
 // Prompt IDs
 const NAME_PROMPT = 'namePrompt';
@@ -32,18 +33,19 @@ var dialogStack=[];
  * @param {String} dialogId unique identifier for this dialog instance
  * @param {PropertyStateAccessor} userProfileAccessor property accessor for user state
  */
-class Main extends ComponentDialog {
-    constructor(dialogId, userProfileAccessor) {
-        super(dialogId);
+class MainDialog extends ComponentDialog {
+    constructor(userState, dialogId) {
+        super('MainDialog');
 
         // validate what was passed in
         if (!dialogId) throw new Error('Missing parameter.  dialogId is required');
-        if (!userProfileAccessor) throw new Error('Missing parameter.  userProfileAccessor is required');
+        //if (!userProfileAccessor) throw new Error('Missing parameter.  userProfileAccessor is required');
+        this.userProfileAccessor = userState.createProperty("userState");
 
         // Add a water fall dialog with 4 steps.
         // The order of step function registration is important
         // as a water fall dialog executes steps registered in order
-        this.addDialog(new WaterfallDialog("MAIN_DIALOG", [
+        this.addDialog(new WaterfallDialog(MAIN_DIALOG, [
             this.MAINSTEP.bind(this),
             this.LOOP.bind(this)
         ]));
@@ -52,21 +54,39 @@ class Main extends ComponentDialog {
         this.addDialog(new TextPrompt(NAME_PROMPT));
         this.addDialog(new ChoicePrompt(CHOICE_PROMPT));
 
+        this.initialDialogId = MAIN_DIALOG;
+
         // Save off our state accessor for later use
-        this.userProfileAccessor = userProfileAccessor;
+        //this.userProfileAccessor = userProfileAccessor;
     }
 
-async MAINSTEP(step){
-    let userProfile = await this.userProfileAccessor.get(step.context);
-    if (userProfile === undefined) {
-        userProfile = {step:1};
+    /**
+     * The run method handles the incoming activity (in the form of a DialogContext) and passes it through the dialog system.
+     * If no dialog is active, it will start the default dialog.
+     * @param {*} dialogContext
+     */
+    async run(context, accessor) {
+        const dialogSet = new DialogSet(accessor);
+        dialogSet.add(this);
+
+        const dialogContext = await dialogSet.createContext(context);
+        const results = await dialogContext.continueDialog();
+        if (results.status === DialogTurnStatus.empty) {
+            await dialogContext.beginDialog(MAIN_DIALOG);
+        }
     }
 
-    var stepNumber=userProfile.step;
-    //SAVE step
-    await this.userProfileAccessor.set(step.context, userProfile);
+    async MAINSTEP(step){
+        let userProfile = await this.userProfileAccessor.get(step.context);
+        if (userProfile === undefined) {
+            userProfile = {step:1};
+        }
 
-    switch (stepNumber) {
+        var stepNumber=userProfile.step;
+        //SAVE step
+        await this.userProfileAccessor.set(step.context, userProfile);
+
+        switch (stepNumber) {
 //STEPS
 ###STEPS###    
             default:
@@ -137,6 +157,114 @@ async MAINSTEP(step){
             host: Hostname
         };
         return new QnAMaker(qnaEndpointSettings);
+    }
+    async QueryQnAServiceAsync(query, EndpointKey, KnowledgeBaseId, Host)
+    {
+        var requestUrl = Host + "/knowledgebases/" + KnowledgeBaseId + "/generateanswer";
+        var r= {verb:"POST", 
+                url:requestUrl, 
+                headers:{Authorization:"EndpointKey " + EndpointKey, "Content-Type": "application/json; charset=utf-8"}, 
+                data:JSON.stringify({question:query})
+            };
+
+        var result=await request({
+            "method":r.verb, 
+            "uri": r.url,
+            "headers":r.headers,
+            "body":r.data,
+        }).then(
+            function(data){
+                return data;
+                }, 
+            function(data){
+                console.log("ERROR");
+                console.log(data);
+            return data;
+        });
+        result=JSON.parse(result);
+        return result.answers;
+    }
+    async qnaResultsDisplay(step, thisStep, userProfile, qnaResults)
+    {
+        //console.log(qnaResults);
+        if (qnaResults.length > 0)
+        {
+            var res = qnaResults[0].answer;
+            var prompts=[];
+            if (qnaResults[0].context)
+                prompts = qnaResults[0].context.prompts;
+
+            if (prompts.length>0)
+            {
+                console.log("PROMPTS")
+                console.log(prompts)
+                const reply = { type: "message" };
+
+                const buttons = [];
+                for (var i = 0; i < prompts.length; i++)
+                {
+                    buttons.push({ type:"imBack", title: prompts[i].displayText, value: prompts[i].displayText });
+                }
+                
+                const card = CardFactory.heroCard('', undefined,
+                    buttons, { text: '' });
+                
+                reply.attachments = [card];
+                
+                await step.context.sendActivity(reply);
+
+                userProfile.step = thisStep;
+            }
+            else
+            {
+                await step.context.sendActivity(res);
+            }
+        }
+        else
+        {
+            await step.context.sendActivity("Sorry, didn't find answers in the KB.");
+        }
+    }
+    async SearchQuery(step, searchServiceName, ServiceKey, indexName, fieldTitle, fieldText, filter, searchText)
+    {
+        var r= {
+            verb:"GET", 
+            url:"https://" + searchServiceName + ".search.windows.net/indexes/" + indexName + "/docs?api-version=2019-05-06&search=" + searchText,
+            headers:{"api-key":ServiceKey},
+        };
+        var results= await request({
+            "method":r.verb, 
+            "uri": r.url,
+            "headers":r.headers,
+            "body":r.data,
+        }).then(
+            function(data){
+                return data;
+                }, 
+            function(data){
+            console.log("ERROR");
+            //console.log(data);
+            return data;
+        });
+        results=JSON.parse(results);
+
+        const reply = { type: "message" };
+        reply.text = 'This is an inline attachment.';
+        reply.attachmentLayout = "carousel";
+        var cards=[];
+        for (var i = 0; i < results.value.length; i++)
+        {
+            const card = CardFactory.heroCard(
+                '',
+                undefined,
+                null, 
+                { text: results.value[i][fieldText], title:results.value[i][fieldTitle] });
+
+            cards.push(card);
+        }
+        reply.attachments = cards;
+
+        await step.context.sendActivity(reply);
     }
     suggestActionsOptions(prompt,choices)
     {
@@ -227,4 +355,4 @@ async MAINSTEP(step){
     }
 }
 
-exports.MainDialog = Main;
+exports.MainDialog = MainDialog;

@@ -25,7 +25,7 @@ var menu =
       var GETUSERPROFILE = "let userProfile = await this.userProfileAccessor.get(step.context);\n";
       var SUGGESTEDACTIONS = "this.suggestActionsOptions";
       var LUIS_RECOGNIZE = "var results = await luisRecognizer.recognize(step.context);var topIntent = LuisRecognizer.topIntent(results);";
-      var QNA_RESULTS = "var qnaResults = await qnaMaker.generateAnswer(stepResult, 1, 0.1); if (qnaResults[0]) {var res=qnaResults[0].answer;";
+      var QNA_RESULTS = "await this.qnaResultsDisplay(step, ACTUAL_STEP, userProfile, qnaResults);";
       var ARRAY_PREFIX = "[";
       var ARRAY_SUFIX = "]";
       var CHOICE_FUNCTION = "NAME_PROMPT";
@@ -243,7 +243,7 @@ var menu =
           functions += `${PROMPT_CONVERSION}
           return await step.${PROMPT_FUNCTION}(NAME_PROMPT, promptoptions );
           }\n`;
-          movenext += `var qnaResults = await QueryQnAServiceAsync(stepResult, "${element.parKey}", "${element.parPar}", "${element.parURL}");
+          movenext += `var qnaResults = await this.QueryQnAServiceAsync(stepResult, "${element.parKey}", "${element.parPar}", "${element.parURL}");
           userProfile.step=${n};
           ${QNA_RESULTS.replace("ACTUAL_STEP",element.newIndex)}
           this.addProp(userProfile,"${element.parVar}",stepResult);
@@ -257,7 +257,7 @@ var menu =
           functions += `${PROMPT_CONVERSION}
           return await step.${PROMPT_FUNCTION}(NAME_PROMPT, promptoptions );
           }\n`;
-          movenext += `await SearchQuery(step, "${element.parTx0}", "${element.parKey}", "${element.parTx1}", "${element.parAPI}", "${element.parTyp}", "${element.parPar}", stepResult);
+          movenext += `await this.SearchQuery(step, "${element.parTx0}", "${element.parKey}", "${element.parTx1}", "${element.parAPI}", "${element.parTyp}", "${element.parPar}", stepResult);
           userProfile.step=${n};
           this.addProp(userProfile,"${element.parVar}",stepResult);
           break;\n`;

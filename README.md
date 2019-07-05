@@ -68,8 +68,6 @@ https://lambot.blob.core.windows.net/github/botconversationdesigner/GreenCard.bo
     - API
     - Translation (runs on the html but is not yet included on the export)
     - Application Insights configurations
-    - QNA multiturn
-    - Search
 - EXPORT TO C# missing features: (will implement only if there is demand)
     - card
     - API
