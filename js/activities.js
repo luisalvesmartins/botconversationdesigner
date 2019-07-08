@@ -465,37 +465,35 @@ var Bot = {
           topScoringIntent = QNAResult.answers[0].answer;
 
           if (QNAResult.answers[0].context){
-
             // console.log("QNARESULT")
             // console.log(QNAResult);
             var prompts=QNAResult.answers[0].context.prompts;
-            // console.log("PROMPTS")
-            // console.log(prompts)
-
-            var buttons=[];
-            for (let index = 0; index < prompts.length; index++) {
-              const element = prompts[index].displayText;
-              buttons.push(
-                {
-                  "title": element,
-                  "type": "imBack",
-                  "value": element
-                }
-              );
-            }
-
-            if (buttons.length>0)
-              extension={"attachments":
-                [
+            if (prompts!=null){
+              var buttons=[];
+              for (let index = 0; index < prompts.length; index++) {
+                const element = prompts[index].displayText;
+                buttons.push(
                   {
-                    "content": {
-                      "buttons": buttons,
-                      "text": topScoringIntent
-                    },
-                    "contentType": "application/vnd.microsoft.card.hero"
+                    "title": element,
+                    "type": "imBack",
+                    "value": element
                   }
-                ]
-              };
+                );
+              }
+
+              if (buttons.length>0)
+                extension={"attachments":
+                  [
+                    {
+                      "content": {
+                        "buttons": buttons,
+                        "text": topScoringIntent
+                      },
+                      "contentType": "application/vnd.microsoft.card.hero"
+                    }
+                  ]
+                };
+            }
           }
 
           if (a.parVar) {
