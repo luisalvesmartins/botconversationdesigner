@@ -274,9 +274,8 @@ var LoadAndSave = {
     Tab.dialogs[Tab.selected]=sDiagram;
 
     var Flow=[];
-    for (let index = 0; index < Tab.dialogs.length; index++) {
+    for (let index = 0; index < Tab.tabs.length-1; index++) {
       const element = Tab.dialogs[index];
-
       var botObject = LoadAndSave.convertDiagramToBot(element,Tab.tabs[index]);
       Flow=Flow.concat(botObject);
     }
@@ -1041,9 +1040,10 @@ var Tab={
   },
   init:function(){
     Tab.tabs=["Main","+"];
-    Tab.selected=0;
-    Tab.dialogs[0]={};
+    Tab.dialogs=[];
+    Tab.dialogs.push({});
     Tab.draw();
+    Tab.sel(0);
   },
   sel:function(nTab){
     if (Tab.selected!=-1){
