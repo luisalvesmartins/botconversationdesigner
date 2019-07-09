@@ -195,6 +195,7 @@ function DisplayProperties(data) {
           "<option>signinCard</option>" +
           "<option>thumbnailCard</option>" +
           "<option>videoCard</option>" +
+          "<option>carousel</option>" +
           "</select>";
         break;
       case "parCkv":
@@ -709,6 +710,12 @@ var Bot = {
           FieldDefinition=GetTypeDefinition(a.type)
           if (FieldDefinition.waitForUserInput!="true")
             condition = true;
+          if (a.type=="CARD")
+          {
+            if (a.parTra=="No"){
+              condition=true;
+            }
+          }
         }
         else {
           messages.push({ type: "MESSAGE", text: "<end of flow>" });
@@ -753,7 +760,13 @@ var Bot = {
       var extension=flowItem.extension;
       switch (flowItem.type) {
         case "CARD":
+          flowItem.text = "";
           switch (flowItem.parCar) {
+            case "carousel":
+              var cardText = Bot.ReplacePragmas(flowItem.parCrd);
+              extension = { "attachments": JSON.parse(flowItem.parCrd) };
+              attachmentLayout="carousel";
+              break;
             case "adaptiveCard":
               var cardText = Bot.ReplacePragmas(flowItem.parCrd);
 
@@ -765,7 +778,6 @@ var Bot = {
                   }
                 ]
               };
-              flowItem.text = "";
               break;
             default:
               extension = { "attachments": [JSON.parse(flowItem.parCrd)] };
@@ -1044,6 +1056,7 @@ var Tab={
     Tab.dialogs.push({});
     Tab.draw();
     Tab.sel(0);
+    $(".css-ljhy6a.css-7c9av6").html("");
   },
   sel:function(nTab){
     if (Tab.selected!=-1){
