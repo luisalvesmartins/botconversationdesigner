@@ -18,6 +18,7 @@ namespace SampleBot
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .UseApplicationInsights()
                 .ConfigureLogging((logging) =>
                 {
                     logging.AddDebug();
