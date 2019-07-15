@@ -18,6 +18,9 @@ const { MainDialog } = require('./dialogs/mainDialog');
 const ENV_FILE = path.join(__dirname, '.env');
 require('dotenv').config({ path: ENV_FILE });
 
+let appInsights = require('applicationinsights');
+appInsights.setup(process.env.appInsightsInstrumentationKey).start();
+
 // Create adapter.
 // See https://aka.ms/about-bot-adapter to learn more about adapters.
 const adapter = new BotFrameworkAdapter({
@@ -30,6 +33,7 @@ adapter.onTurnError = async (context, error) => {
     // This check writes out errors to console log
     // NOTE: In production environment, you should consider logging this to Azure
     //       application insights.
+    appInsights.defaultClient.trackEvent("TurnError",JSON.stringify(error));
     console.error(`\n [onTurnError]: ${ error }`);
     // Send a message to the user
     await context.sendActivity(`Oops. Something went wrong!`);
