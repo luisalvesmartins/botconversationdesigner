@@ -144,6 +144,24 @@ var menu =
           break;
         case "CARD":
           switch (element.parCar) {
+            case "carousel":
+              output += `   var card=${replaceAll(element.parCrd, '\n', '')};
+            card=JSON.parse(await this.ReplacePragmas(step,JSON.stringify(card)));
+            await ${SEND_ACTIVITY}({
+              text: await this.ReplacePragmas(step,STRING_${element.newIndex}),
+              attachments: card, attachmentLayout="carousel" ]
+                });
+                ${CONTEXT_NEXT}`;
+              break;
+            case "heroCard":
+              output += `   var card=${replaceAll(element.parCrd, '\n', '')};
+            card=JSON.parse(await this.ReplacePragmas(step,JSON.stringify(card)));
+            await ${SEND_ACTIVITY}({
+              text: await this.ReplacePragmas(step,STRING_${element.newIndex}),
+              attachments: [card]
+                });
+                ${CONTEXT_NEXT}`;
+              break;
             case "adaptiveCard":
               output += `   var card=${replaceAll(element.parCrd, '\n', '')};
             card=JSON.parse(await this.ReplacePragmas(step,JSON.stringify(card)));
@@ -153,8 +171,14 @@ var menu =
                 });
                 ${CONTEXT_NEXT}`;
                 break;
-
             default:
+              output += `   var card=${replaceAll(element.parCrd, '\n', '')};
+            card=JSON.parse(await this.ReplacePragmas(step,JSON.stringify(card)));
+            await ${SEND_ACTIVITY}({
+              text: await this.ReplacePragmas(step,STRING_${element.newIndex}),
+              attachments: card]
+                });
+                ${CONTEXT_NEXT}`;
               break;
           }
           movenext += `userProfile.step=${n};\n            break;\n`;
