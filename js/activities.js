@@ -274,6 +274,8 @@ var LoadAndSave = {
     var sDiagram = myDiagram.model.toJson();
     Tab.dialogs[Tab.selected]=sDiagram;
 
+    if (Tab.tabs.length==1)
+      Tab.tabs.push("+");
     var Flow=[];
     for (let index = 0; index < Tab.tabs.length-1; index++) {
       const element = Tab.dialogs[index];
