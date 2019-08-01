@@ -122,6 +122,11 @@ namespace SampleBot
 
 ///FUNCTIONS
 ###FUNCTIONS###    
+        async Task&lt;DialogTurnResult> STEP_QNAPROMPT(WaterfallStepContext step) //QNA-PROMPT
+        {
+            var promptoptions = new PromptOptions { Prompt = new Activity { Type = ActivityTypes.Message, Text = "", } };
+            return await step.PromptAsync(NAME_PROMPT, promptoptions);
+        }
 
         async Task&lt;string> ReplacePragmas(WaterfallStepContext step, string text)
         {
@@ -233,24 +238,30 @@ namespace SampleBot
                 var res = qnaResults[0].Answer;
                 var prompts = qnaResults[0].Context?.Prompts;
 
-                if (prompts.Length > 0)
-                {
-                    var buttons = new List&lt;Choice>();
-                    for (int i = 0; i &lt; prompts.Length; i++)
+                if (prompts!=null){
+                    if (prompts.Length > 0)
                     {
-                        CardAction CA = new CardAction() { Type = ActionTypes.ImBack, Title = prompts[i].DisplayText, Value = prompts[i].DisplayText };
-                        buttons.Add(new Choice { Action = CA, Value = prompts[i].DisplayText });
+                        var buttons = new List&lt;Choice>();
+                        for (int i = 0; i &lt; prompts.Length; i++)
+                        {
+                            CardAction CA = new CardAction() { Type = ActionTypes.ImBack, Title = prompts[i].DisplayText, Value = prompts[i].DisplayText };
+                            buttons.Add(new Choice { Action = CA, Value = prompts[i].DisplayText });
+                        }
+
+                        var options = new PromptOptions()
+                        {
+                            Prompt = MessageFactory.Text(res),
+                            Style = ListStyle.HeroCard,
+                            Choices = buttons,
+                        };
+
+                        await step.PromptAsync(CHOICE_PROMPT, options, cancellationToken);
+                        userProfile.step = -1;
                     }
-
-                    var options = new PromptOptions()
+                    else
                     {
-                        Prompt = MessageFactory.Text(res),
-                        Style = ListStyle.HeroCard,
-                        Choices = buttons,
-                    };
-
-                    await step.PromptAsync(CHOICE_PROMPT, options, cancellationToken);
-                    userProfile.step = thisStep;
+                        await step.Context.SendActivityAsync(res);
+                    }
                 }
                 else
                 {
