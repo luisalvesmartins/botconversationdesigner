@@ -256,7 +256,7 @@ namespace SampleBot
                         };
 
                         await step.PromptAsync(CHOICE_PROMPT, options, cancellationToken);
-                        userProfile.step = -1;
+                        userProfile.step = thisStep;
                     }
                     else
                     {
