@@ -136,7 +136,7 @@ namespace SampleBot
                 ContentType = "application/vnd.microsoft.card.adaptive"
             };
             var response = ((Activity)step.Context.Activity).CreateReply();
-            response.Attachments = new List<Attachment>() { card };
+            response.Attachments = new List&lt;Attachment>() { card };
             return response;
         }
 

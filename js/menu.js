@@ -163,6 +163,9 @@ var menu =
                 ${CONTEXT_NEXT}`;
               break;
             case "adaptiveCard":
+//              FOR C#:
+//              var cardJSON="card in JSON STRING";
+//              await step.Context.SendActivityAsync(AdaptiveCard(cardJSON, step));
               output += `   var card=${replaceAll(element.parCrd, '\n', '')};
             card=JSON.parse(await this.ReplacePragmas(step,JSON.stringify(card)));
             await ${SEND_ACTIVITY}({
