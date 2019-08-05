@@ -128,6 +128,19 @@ namespace SampleBot
             return await step.PromptAsync(NAME_PROMPT, promptoptions);
         }
 
+        Activity AdaptiveCard(string cardJSON, WaterfallStepContext step)
+        {
+            Attachment card = new Attachment()
+            {
+                Content = JsonConvert.DeserializeObject(cardJSON),
+                ContentType = "application/vnd.microsoft.card.adaptive"
+            };
+            var response = ((Activity)step.Context.Activity).CreateReply();
+            response.Attachments = new List<Attachment>() { card };
+            return response;
+        }
+
+
         async Task&lt;string> ReplacePragmas(WaterfallStepContext step, string text)
         {
             var userProfile = await UserProfileAccessor.GetAsync(step.Context, () => null);
