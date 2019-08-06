@@ -83,7 +83,11 @@ namespace SampleBot
             var userProfile= await UserProfileAccessor.GetAsync(step.Context, () => null);
             if (userProfile == null)
             {
+                //CHANGE THIS STEP NUMBER 1 TO THE FIRST STEP YOU WANT
                 userProfile = new userState() { step = 1, props=new Dictionary&lt;string, string>() };
+                var stepResult = (string)step.Context.Activity.Text;
+                if (stepResult != "")
+                    this.addProp(userProfile, "init", stepResult);
                 await UserProfileAccessor.SetAsync(step.Context, userProfile);
             }
             var stepNumber = userProfile.step;
@@ -104,6 +108,11 @@ namespace SampleBot
         {
             var userProfile = await UserProfileAccessor.GetAsync(step.Context, () => null);
             var stepResult = getResult(step);
+            if (getProp(userProfile,"init")!="")
+            {
+                stepResult = getProp(userProfile, "init");
+                addProp(userProfile, "init", "");
+            }
             string expression="";
 
 
