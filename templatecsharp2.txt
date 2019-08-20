@@ -40,7 +40,7 @@ namespace SampleBot
     /// - Use custom prompts to validate user input
     /// - Store conversation and user state.
     /// &lt;/summary>
-    public class MainDialog : ComponentDialog
+    public class MainDialog : IBot
     {
         public DialogStack dialogStack=new DialogStack();
 
@@ -51,8 +51,12 @@ namespace SampleBot
 // TEXT STRINGS
 ###TEXTSTRINGS###
 
+        private readonly IStatePropertyAccessor&lt;DialogState> _dialogStateAccessor;
+
         public IStatePropertyAccessor&lt;userState&gt; UserProfileAccessor { get; }
         protected readonly ILogger Logger;
+
+        private DialogSet Dialogs { get; set; }
 
         // Dialog IDs
         /// &lt;summary>
@@ -62,22 +66,46 @@ namespace SampleBot
         /// &lt;param name="botState">The &lt;see cref="UserState"/> for storing properties at user-scope.&lt;param>
         /// &lt;param name="loggerFactory">The &lt;see cref="ILoggerFactory"/> that enables logging and tracing.&lt;/param>
         public MainDialog(UserState _userState, ILogger&lt;MainDialog&gt; logger)
-            : base(nameof(MainDialog))
         {
             Logger = logger;
+            _dialogStateAccessor = _userState.CreateProperty&lt;DialogState>(nameof(DialogState));
+
+            Dialogs = new DialogSet(_dialogStateAccessor);
+            Dialogs.Add(new TextPrompt(NAME_PROMPT));
+            Dialogs.Add(new ChoicePrompt(CHOICE_PROMPT) { Style = ListStyle.SuggestedAction });
 
             // Add control flow dialogs
-            AddDialog(new WaterfallDialog(MAIN_DIALOG,new WaterfallStep[]
+            Dialogs.Add(new WaterfallDialog(MAIN_DIALOG,new WaterfallStep[]
                                                     {
                                                             MAINSTEP,
                                                             LOOP
                                                     }
                     ));
-            AddDialog(new TextPrompt(NAME_PROMPT));
-            AddDialog(new ChoicePrompt(CHOICE_PROMPT) { Style=ListStyle.SuggestedAction });
 
             UserProfileAccessor = _userState.CreateProperty&lt;userState&gt;(nameof(_userState));
 
+        }
+
+        public async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken)
+        {
+            if (turnContext.Activity.Type == "message") {
+                var dc = await Dialogs.CreateContextAsync(turnContext);
+                await dc.BeginDialogAsync(MAIN_DIALOG, null, cancellationToken);
+            }
+            if (turnContext.Activity.Type == ActivityTypes.ConversationUpdate)
+            {
+                foreach (var member in turnContext.Activity.MembersAdded)
+                {
+                    // Greet anyone that was not the target (recipient) of this message.
+                    // To learn more about Adaptive Cards, see https://aka.ms/msbot-adaptivecards for more details.
+                    if (member.Id != turnContext.Activity.Recipient.Id)
+                    {
+                        await turnContext.SendActivityAsync("hi there");
+
+                    }
+
+                }
+            }
         }
 
         private async Task&lt;DialogTurnResult> MAINSTEP(WaterfallStepContext step, CancellationToken cancellationToken)

@@ -90,9 +90,6 @@ function cardTemplate() {
       break;
   }
   document.all("parCrd").value = JSON.stringify(attachments);
-  // console.log("ATT:" + parCar)
-  // console.log(JSON.stringify(attachments))
-  //document.all("parCrd").innerText=JSON.stringify(attachments);
 }
 
 function parSave() {
@@ -102,7 +99,6 @@ function parSave() {
     for (var f = 0; f < ParameterList.length; f++) {
       var name = ParameterList[f].name;
       if (document.all(name)) {
-        //console.log(name + "->" + document.all(name).type)
         data[name] = document.all(name).value;
       }
 
@@ -447,62 +443,6 @@ var Bot = {
         }
       }
       var extension=null;
-      if (a.type == "QNA") {
-        //DO THE CALL
-        var QNAResult = undefined;
-        try {
-          var url = a.parURL + "/knowledgebases/" + a.parPar + "/generateAnswer";
-          var headers = { "Authorization": "EndpointKey " + a.parKey, "Content-Type": "application/json" };
-          var res = $.post({
-            url: url,
-            headers: headers,
-            async: false,
-            data: "{\"question\":\"" + encodeURI(userText) + "\"}"
-          }).responseText;
-          QNAResult = JSON.parse(res);
-        } catch (error) {
-          alert("ERROR IN QNA PARAMETERS");
-        }
-        if (QNAResult) {
-          topScoringIntent = QNAResult.answers[0].answer;
-
-          if (QNAResult.answers[0].context){
-            // console.log("QNARESULT")
-            // console.log(QNAResult);
-            var prompts=QNAResult.answers[0].context.prompts;
-            if (prompts!=null){
-              var buttons=[];
-              for (let index = 0; index < prompts.length; index++) {
-                const element = prompts[index].displayText;
-                buttons.push(
-                  {
-                    "title": element,
-                    "type": "imBack",
-                    "value": element
-                  }
-                );
-              }
-
-              if (buttons.length>0)
-                extension={"attachments":
-                  [
-                    {
-                      "content": {
-                        "buttons": buttons,
-                        "text": topScoringIntent
-                      },
-                      "contentType": "application/vnd.microsoft.card.hero"
-                    }
-                  ]
-                };
-            }
-          }
-
-          if (a.parVar) {
-            Bot.userData[a.parVar + "_Result"] = topScoringIntent;
-          }
-        }
-      }
       if (a.type == "SEARCH") {
         //DO THE CALL
         var SearchResult = undefined;
@@ -516,7 +456,6 @@ var Bot = {
         } catch (error) {
           alert("ERROR IN SEARCH PARAMETERS");
         }
-        //console.log(SearchResult.value);
         if (SearchResult.value.length>0) {
           var at=[];
           for (let index = 0; index < SearchResult.value.length; index++) {
@@ -534,7 +473,7 @@ var Bot = {
                 at, "attachmentLayout":"carousel" 
               };
             }
-          console.log(extension);
+          //console.log(extension);
 
           if (a.parVar) {
             Bot.userData[a.parVar + "_Result"] = SearchResult;
@@ -544,13 +483,74 @@ var Bot = {
       var messages = [];
       var bailout=0;
       do {
+        //console.log("A.TYPE:" + a.type)
+
+        if (a.type == "QNA") {
+          //DO THE CALL
+          var QNAResult = undefined;
+          try {
+            var url = a.parURL + "/knowledgebases/" + a.parPar + "/generateAnswer";
+            var headers = { "Authorization": "EndpointKey " + a.parKey, "Content-Type": "application/json" };
+            var res = $.post({
+              url: url,
+              headers: headers,
+              async: false,
+              data: "{\"question\":\"" + encodeURI(userText) + "\"}"
+            }).responseText;
+            QNAResult = JSON.parse(res);
+          } catch (error) {
+            alert("ERROR IN QNA PARAMETERS");
+          }
+          if (QNAResult) {
+            topScoringIntent = QNAResult.answers[0].answer;
+  
+            if (QNAResult.answers[0].context){
+              var prompts=QNAResult.answers[0].context.prompts;
+              if (prompts!=null){
+                var buttons=[];
+                for (let index = 0; index < prompts.length; index++) {
+                  const element = prompts[index].displayText;
+                  buttons.push(
+                    {
+                      "title": element,
+                      "type": "imBack",
+                      "value": element
+                    }
+                  );
+                }
+  
+                if (buttons.length>0)
+                  extension={"attachments":
+                    [
+                      {
+                        "content": {
+                          "buttons": buttons,
+                          "text": topScoringIntent
+                        },
+                        "contentType": "application/vnd.microsoft.card.hero"
+                      }
+                    ]
+                  };
+              }
+            }
+  
+            if (a.parVar) {
+              Bot.userData[a.parVar + "_QNAResult"] = escape(JSON.stringify(QNAResult.answers[0]));
+              Bot.userData[a.parVar + "_Result"] = topScoringIntent;
+            }
+          }
+        }
+
         bailout++;
         condition = false;
         var text = userText;
-
         if (a.type == "IF") {
           text = Bot.ReplacePragmas(a.parCon)
+          // console.log("IF");
+          // console.log(text);
           text = eval(text).toString();
+          // console.log("RESULT");
+          // console.log(text);
         }
         if (a.type == "LUIS") {
           text = topScoringIntent;
@@ -624,13 +624,11 @@ var Bot = {
         {
           //RETURN TO PREVIOUS DIALOG
           var currentPos=Bot.dialogstack.pop();
-          //console.log(currentPos);
           Tab.sel(currentPos.previousTab);
           //find currentPos.key
           var goto = searchArray(flow, currentPos.key, "key");
           a.next=goto.next;
           myDiagram.select(myDiagram.findNodeForKey(currentPos.key));
-          //console.log(goto);
         }
 
         var FieldDefinition=GetTypeDefinition(a.type)
@@ -653,6 +651,12 @@ var Bot = {
           if (FieldDefinition.showMessage=="false")
             bSendMessage = false;
           if (goto.type == "INPUT") {
+            if (goto.parCkv == "No" && Bot.userData[goto.parVar]) {
+              bSendMessage = false;
+              condition = true;
+            }
+          }
+          if (goto.type == "QNA") {
             if (goto.parCkv == "No" && Bot.userData[goto.parVar]) {
               bSendMessage = false;
               condition = true;
@@ -733,7 +737,6 @@ var Bot = {
   },
   getNext: function (nextOptions, message) {
     //TODO: evaluate nextOption
-    //console.log("LENGTH:" + nextOptions.length);
     if (nextOptions.length <= 0) {
       return undefined;
     }
@@ -785,7 +788,6 @@ var Bot = {
               extension = { "attachments": [JSON.parse(flowItem.parCrd)] };
               break;
           }
-          //console.log(extension);
           break;
         case "CHOICE":
           var actions = [];
@@ -831,7 +833,6 @@ var Bot = {
         "channelId": "web",
       }, extension));
       //Bot.sendMessage(flowItem.text, extension);
-      //console.log(activities);
       var message = { activities: activities };
     }
     DirectLineEmulator.emptyActivity = message;
@@ -875,9 +876,6 @@ function replaceAll(text, search, replacement) {
   return text.replace(new RegExp(search, 'g'), replacement);
 };
 function searchArray(myArray, nameKey, prop,dialog) {
-  //console.log("SEARCHARRAY")
-  //console.log(myArray)
-  //console.log(nameKey + "," + dialog)
   if (!dialog)
     dialog=Tab.tabs[Tab.selected];
   for (var i = 0; i < myArray.length; i++) {

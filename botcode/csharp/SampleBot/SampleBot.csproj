@@ -8,9 +8,11 @@
 
   <ItemGroup>
     <Compile Remove="Dialogs\MainDialog - Copy.cs" />
+    <Compile Remove="Dialogs\MainDialog.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Jint" Version="2.11.58" />
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.10.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.App" />

@@ -31,7 +31,7 @@ var menu =
       var CHOICE_FUNCTION = "NAME_PROMPT";
       var DIALOG_PUSH="dialogStack.push({step:ELEMENT_STEP,dialog:\"ELEMENT_DIALOG\"});";
 
-      menu.exportcore(template, CONTEXT_NEXT, STRING_DECLARATION, SEND_ACTIVITY, STEP_DECLARATION, FUNCTION_DECLARATION, PROMPT_FUNCTION, PROMPT_CONVERSION, GETUSERPROFILE, SUGGESTEDACTIONS, LUIS_RECOGNIZE, QNA_RESULTS, ARRAY_PREFIX, ARRAY_SUFIX, CHOICE_FUNCTION,DIALOG_PUSH);
+      menu.exportcore(template, "node", CONTEXT_NEXT, STRING_DECLARATION, SEND_ACTIVITY, STEP_DECLARATION, FUNCTION_DECLARATION, PROMPT_FUNCTION, PROMPT_CONVERSION, GETUSERPROFILE, SUGGESTEDACTIONS, LUIS_RECOGNIZE, QNA_RESULTS, ARRAY_PREFIX, ARRAY_SUFIX, CHOICE_FUNCTION,DIALOG_PUSH);
 
     });
   },
@@ -53,13 +53,34 @@ var menu =
       var CHOICE_FUNCTION = "CHOICE_PROMPT";
       var DIALOG_PUSH="dialogStack.push(new DialogStep {step=ELEMENT_STEP,dialog=\"ELEMENT_DIALOG\"});";
 
-      menu.exportcore(template, CONTEXT_NEXT, STRING_DECLARATION, SEND_ACTIVITY, STEP_DECLARATION, FUNCTION_DECLARATION, PROMPT_FUNCTION, PROMPT_CONVERSION, GETUSERPROFILE, SUGGESTEDACTIONS, LUIS_RECOGNIZE, QNA_RESULTS, ARRAY_PREFIX, ARRAY_SUFIX, CHOICE_FUNCTION,DIALOG_PUSH);
+      menu.exportcore(template, "c#", CONTEXT_NEXT, STRING_DECLARATION, SEND_ACTIVITY, STEP_DECLARATION, FUNCTION_DECLARATION, PROMPT_FUNCTION, PROMPT_CONVERSION, GETUSERPROFILE, SUGGESTEDACTIONS, LUIS_RECOGNIZE, QNA_RESULTS, ARRAY_PREFIX, ARRAY_SUFIX, CHOICE_FUNCTION,DIALOG_PUSH);
+    });
+  },
+  exportCsharp2: function () {
+    readTextFilePromise("templatecsharp2.txt").then(function (template) {
+      var CONTEXT_NEXT = "return await step.NextAsync();\n";
+      var STRING_DECLARATION = "public const string ";
+      var SEND_ACTIVITY = "step.Context.SendActivityAsync";
+      var STEP_DECLARATION = "WaterfallStepContext ";
+      var FUNCTION_DECLARATION = "async Task&lt;DialogTurnResult> ";
+      var PROMPT_FUNCTION = "PromptAsync";
+      var PROMPT_CONVERSION = "var promptoptions = new PromptOptions{Prompt = new Activity{Type = ActivityTypes.Message,Text = text,}};";
+      var GETUSERPROFILE = "var userProfile = await UserProfileAccessor.GetAsync(step.Context, () => null);\n";
+      var SUGGESTEDACTIONS = "suggestActionsOptions";
+      var LUIS_RECOGNIZE = "var results = await luisRecognizer.RecognizeAsync(step.Context,new CancellationToken());var topIntent = LuisRecognizer.TopIntent(results);";
+      var QNA_RESULTS = "await qnaResultsDisplay(step, ACTUAL_STEP, userProfile, qnaResults, cancellationToken);";
+      var ARRAY_PREFIX = "new string[]{";
+      var ARRAY_SUFIX = "}";
+      var CHOICE_FUNCTION = "CHOICE_PROMPT";
+      var DIALOG_PUSH="dialogStack.push(new DialogStep {step=ELEMENT_STEP,dialog=\"ELEMENT_DIALOG\"});";
+
+      menu.exportcore(template, "c#", CONTEXT_NEXT, STRING_DECLARATION, SEND_ACTIVITY, STEP_DECLARATION, FUNCTION_DECLARATION, PROMPT_FUNCTION, PROMPT_CONVERSION, GETUSERPROFILE, SUGGESTEDACTIONS, LUIS_RECOGNIZE, QNA_RESULTS, ARRAY_PREFIX, ARRAY_SUFIX, CHOICE_FUNCTION,DIALOG_PUSH);
     });
   },
   comment: function (element) {
     return element.type + '-' + replaceAll(element.text, '\n', '') + '-' + replaceAll(element.dialog, '\n', '');
   },
-  exportcore: function (template, CONTEXT_NEXT, STRING_DECLARATION, SEND_ACTIVITY, STEP_DECLARATION, FUNCTION_DECLARATION, PROMPT_FUNCTION, PROMPT_CONVERSION, GETUSERPROFILE, SUGGESTEDACTIONS, LUIS_RECOGNIZE, QNA_RESULTS, ARRAY_PREFIX, ARRAY_SUFIX, CHOICE_FUNCTION,DIALOG_PUSH) {
+  exportcore: function (template, language, CONTEXT_NEXT, STRING_DECLARATION, SEND_ACTIVITY, STEP_DECLARATION, FUNCTION_DECLARATION, PROMPT_FUNCTION, PROMPT_CONVERSION, GETUSERPROFILE, SUGGESTEDACTIONS, LUIS_RECOGNIZE, QNA_RESULTS, ARRAY_PREFIX, ARRAY_SUFIX, CHOICE_FUNCTION,DIALOG_PUSH) {
     var flow = LoadAndSave.prepareSave().flow;
     //ORDER ELEMENTS
     var startElement = searchArray(flow, "START", "type");
@@ -142,6 +163,15 @@ var menu =
           movenext += `userProfile.step=${n};\n            break;\n`;
 
           break;
+        case "RESETVAR":
+            output += `   ${CONTEXT_NEXT};\n`;
+            var a = element.parVar.split(",");
+            for (let index = 0; index < a.length; index++) {
+              const varToErase = a[index];
+              movenext += `   this.addProp(userProfile, "${varToErase}", "");\n`;
+            }
+            movenext += `userProfile.step=${n};\n            break;\n`;
+            break;
         case "CARD":
           switch (element.parCar) {
             case "carousel":
@@ -163,16 +193,20 @@ var menu =
                 ${CONTEXT_NEXT}`;
               break;
             case "adaptiveCard":
-//              FOR C#:
-//              var cardJSON="card in JSON STRING";
-//              await step.Context.SendActivityAsync(AdaptiveCard(cardJSON, step));
-              output += `   var card=${replaceAll(element.parCrd, '\n', '')};
+              if (language=="c#"){
+              output += `   cardJSON="${replaceAll(JSON.stringify(JSON.parse(element.parCrd)),'"','\\\"')}";
+              await step.Context.SendActivityAsync(AdaptiveCard(cardJSON, step));
+              ${CONTEXT_NEXT}`;
+              }
+              if (language=="node"){
+                output += `   var card=${replaceAll(element.parCrd, '\n', '')};
             card=JSON.parse(await this.ReplacePragmas(step,JSON.stringify(card)));
             await ${SEND_ACTIVITY}({
               text: await this.ReplacePragmas(step,STRING_${element.newIndex}),
               attachments: [CardFactory.adaptiveCard(card)]
                 });
                 ${CONTEXT_NEXT}`;
+              }
                 break;
             default:
               output += `   var card=${replaceAll(element.parCrd, '\n', '')};
@@ -274,6 +308,7 @@ var menu =
           userProfile.step=${n};
           ${QNA_RESULTS.replace("ACTUAL_STEP",element.newIndex)}
           this.addProp(userProfile,"${element.parVar}",stepResult);
+          this.addProp(userProfile,"${element.parVar}_QNAResult",HttpUtility.HtmlEncode(JsonConvert.SerializeObject(qnaResults[0].Metadata)));
           break;\n`;
           break;
         case "SEARCH":
