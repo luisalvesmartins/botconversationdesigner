@@ -164,7 +164,7 @@ var menu =
 
           break;
         case "RESETVAR":
-            output += `   ${CONTEXT_NEXT};\n`;
+            output += `${CONTEXT_NEXT}`;
             var a = element.parVar.split(",");
             for (let index = 0; index < a.length; index++) {
               const varToErase = a[index];
@@ -180,8 +180,7 @@ var menu =
             await ${SEND_ACTIVITY}({
               text: await this.ReplacePragmas(step,STRING_${element.newIndex}),
               attachments: card, attachmentLayout="carousel" ]
-                });
-                ${CONTEXT_NEXT}`;
+                });\n`;
               break;
             case "heroCard":
               output += `   var card=${replaceAll(element.parCrd, '\n', '')};
@@ -189,14 +188,12 @@ var menu =
             await ${SEND_ACTIVITY}({
               text: await this.ReplacePragmas(step,STRING_${element.newIndex}),
               attachments: [card]
-                });
-                ${CONTEXT_NEXT}`;
+            });\n`;
               break;
             case "adaptiveCard":
               if (language=="c#"){
-              output += `   cardJSON="${replaceAll(JSON.stringify(JSON.parse(element.parCrd)),'"','\\\"')}";
-              await step.Context.SendActivityAsync(AdaptiveCard(cardJSON, step));
-              ${CONTEXT_NEXT}`;
+                output += `   cardJSON="${replaceAll(JSON.stringify(JSON.parse(element.parCrd)),'"','\\\"')}";
+                await step.Context.SendActivityAsync(AdaptiveCard(cardJSON, step));`;
               }
               if (language=="node"){
                 output += `   var card=${replaceAll(element.parCrd, '\n', '')};
@@ -204,8 +201,7 @@ var menu =
             await ${SEND_ACTIVITY}({
               text: await this.ReplacePragmas(step,STRING_${element.newIndex}),
               attachments: [CardFactory.adaptiveCard(card)]
-                });
-                ${CONTEXT_NEXT}`;
+                });\n`;
               }
                 break;
             default:
@@ -214,11 +210,18 @@ var menu =
             await ${SEND_ACTIVITY}({
               text: await this.ReplacePragmas(step,STRING_${element.newIndex}),
               attachments: card]
-                });
-                ${CONTEXT_NEXT}`;
+                });`;
               break;
           }
+          if (element.parTra=="Yes"){
+            output+=`return await step.${PROMPT_FUNCTION}(NAME_PROMPT,  new PromptOptions { Prompt = new Activity { Type = ActivityTypes.Message, Text = "", } } );`
+            movenext += `this.addProp(userProfile,"${element.parVar}",stepResult);\n`;
+          }
+          else{
+            output+=`                ${CONTEXT_NEXT}`;
+          }
           movenext += `userProfile.step=${n};\n            break;\n`;
+
           break;
         case "CHOICE":
           var s = "";
@@ -298,12 +301,26 @@ var menu =
           break;
         case "QNA":
           output += `   return await this.STEP_${element.newIndex}(step);\n`;
+          
           functions += `\n${FUNCTION_DECLARATION}STEP_${element.newIndex}(${STEP_DECLARATION}step) //${menu.comment(element)}
           {\n`;
+          if (element.parCkv == "No") {
+            functions += `${GETUSERPROFILE}
+               if (this.getProp(userProfile,"${element.parVar}")!=""  && getProp(userProfile, "_QNAMULTIPROMPT")=="") {
+                          ${CONTEXT_NEXT}
+                        }\n`;
+          }
           functions += `var text=await this.ReplacePragmas(step,STRING_${element.newIndex});\n`;
           functions += `${PROMPT_CONVERSION}
           return await step.${PROMPT_FUNCTION}(NAME_PROMPT, promptoptions );
           }\n`;
+
+          if (element.parCkv == "No") {
+            movenext += `                    if (stepResult == null) {
+            stepResult = getProp(userProfile, "${element.parVar}");
+            }\n`;
+          }
+
           movenext += `var qnaResults = await this.QueryQnAServiceAsync(stepResult, "${element.parKey}", "${element.parPar}", "${element.parURL}");
           userProfile.step=${n};
           ${QNA_RESULTS.replace("ACTUAL_STEP",element.newIndex)}

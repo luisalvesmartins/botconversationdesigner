@@ -1,9 +1,8 @@
 // Licensed under the MIT License.
 
-// USING BOT TEMPLATE 4.3 
+// USING BOT TEMPLATE 4.3
 // DEPLOYMENT INSTRUCTIONS:
 // 1. GET FULL NODE PROJECT FROM: https://github.com/luisalvesmartins/botconversationdesigner/tree/master/botcode/csharp
-//    OR FROM HERE: https://lambot.blob.core.windows.net/github/botconversationdesigner/samplecsharp.zip
 // 2. REPLACE THE FILE DIALOGS/MAIN.CS WITH THIS CONTENT 
 // 3. RUN THE BOT
 //
@@ -18,7 +17,6 @@ using Microsoft.Bot.Schema;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Extensions.Logging;
-using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Builder.AI.QnA;
 using Microsoft.Bot.Configuration;
@@ -33,13 +31,6 @@ using System.Web;
 
 namespace SampleBot
 {
-    /// &lt;summary>
-    /// Demonstrates the following concepts:
-    /// - Use a subclass of ComponentDialog to implement a multi-turn conversation
-    /// - Use a Waterflow dialog to model multi-turn conversation flow
-    /// - Use custom prompts to validate user input
-    /// - Store conversation and user state.
-    /// &lt;/summary>
     public class MainDialog : ComponentDialog
     {
         public DialogStack dialogStack=new DialogStack();
@@ -54,30 +45,17 @@ namespace SampleBot
         public IStatePropertyAccessor&lt;userState&gt; UserProfileAccessor { get; }
         protected readonly ILogger Logger;
 
-        // Dialog IDs
-        /// &lt;summary>
-        /// Initializes a new instance of the &lt;see cref="GreetingDialog"/> class.
-        /// &lt;/summary>
-        /// &lt;param name="botServices">Connected services used in processing.&lt;/param>
-        /// &lt;param name="botState">The &lt;see cref="UserState"/> for storing properties at user-scope.&lt;param>
-        /// &lt;param name="loggerFactory">The &lt;see cref="ILoggerFactory"/> that enables logging and tracing.&lt;/param>
         public MainDialog(UserState _userState, ILogger&lt;MainDialog&gt; logger)
             : base(nameof(MainDialog))
         {
             Logger = logger;
 
             // Add control flow dialogs
-            AddDialog(new WaterfallDialog(MAIN_DIALOG,new WaterfallStep[]
-                                                    {
-                                                            MAINSTEP,
-                                                            LOOP
-                                                    }
-                    ));
+            AddDialog(new WaterfallDialog(MAIN_DIALOG,new WaterfallStep[] { MAINSTEP, LOOP } ));
             AddDialog(new TextPrompt(NAME_PROMPT));
             AddDialog(new ChoicePrompt(CHOICE_PROMPT) { Style=ListStyle.SuggestedAction });
 
             UserProfileAccessor = _userState.CreateProperty&lt;userState&gt;(nameof(_userState));
-
         }
 
         private async Task&lt;DialogTurnResult> MAINSTEP(WaterfallStepContext step, CancellationToken cancellationToken)
@@ -103,8 +81,6 @@ namespace SampleBot
                         await UserProfileAccessor.SetAsync(step.Context, userProfile);
                         return await step.NextAsync();
                 }
-
-            return await step.NextAsync();
         }
 
         private async Task&lt;DialogTurnResult> LOOP(WaterfallStepContext step,CancellationToken cancellationToken)
@@ -118,11 +94,9 @@ namespace SampleBot
             }
             string expression="";
 
-
             switch (userProfile.step) {
 ///MOVENEXT
 ###MOVENEXT###            
-        
                 default:
                     break;
             }
@@ -152,7 +126,6 @@ namespace SampleBot
             return response;
         }
 
-
         async Task&lt;string> ReplacePragmas(WaterfallStepContext step, string text)
         {
             var userProfile = await UserProfileAccessor.GetAsync(step.Context, () => null);
@@ -171,9 +144,16 @@ namespace SampleBot
                 userProfile.props.Add(key, value);
         }
 
-        string getProp(userState userProfile,string key)
+        string getProp(userState userProfile, string key)
         {
-            return userProfile.props[key];
+            try
+            {
+                return userProfile.props[key];
+            }
+            catch (Exception)
+            {
+                return "";
+            }
         }
 
         bool evalCondition(string expression)
@@ -275,16 +255,19 @@ namespace SampleBot
                             Choices = buttons,
                         };
 
+                        addProp(userProfile, "_QNAMULTIPROMPT", "true");
                         await step.PromptAsync(CHOICE_PROMPT, options, cancellationToken);
                         userProfile.step = thisStep;
                     }
                     else
                     {
+                        addProp(userProfile, "_QNAMULTIPROMPT", "");
                         await step.Context.SendActivityAsync(res);
                     }
                 }
                 else
                 {
+                    addProp(userProfile, "_QNAMULTIPROMPT", "");
                     await step.Context.SendActivityAsync(res);
                 }
             }
